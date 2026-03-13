@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/layout/cookie-consent";
 import { ClientOnly } from "@/components/layout/client-only";
+import { CommandMenu } from "@/components/layout/command-menu";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -41,6 +42,7 @@ export default function RootLayout({
         <ClientOnly>
           <Toaster />
           <CookieConsent />
+          <CommandMenu />
         </ClientOnly>
       </body>
     </html>

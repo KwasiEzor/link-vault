@@ -84,3 +84,57 @@ export async function getTotalClicks(userId: string) {
     },
   });
 }
+
+export async function getBreakdownData(userId: string) {
+  const session = await auth();
+  if (session?.user?.id !== userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const clicks = await prisma.click.findMany({
+    where: {
+      link: {
+        userId,
+      },
+    },
+    select: {
+      userAgent: true,
+      referrer: true,
+      ip: true, // We'll use this for a simple geo-estimate if needed, but headers are better
+    },
+  });
+
+  const devices: Record<string, number> = { Mobile: 0, Desktop: 0, Tablet: 0, Other: 0 };
+  const referrers: Record<string, number> = {};
+
+  clicks.forEach((click) => {
+    // Basic Device Detection
+    const ua = click.userAgent?.toLowerCase() || "";
+    if (ua.includes("mobi")) devices.Mobile++;
+    else if (ua.includes("tablet") || ua.includes("ipad")) devices.Tablet++;
+    else if (ua.length > 10) devices.Desktop++;
+    else devices.Other++;
+
+    // Referrer Cleaning
+    if (click.referrer) {
+      try {
+        const domain = new URL(click.referrer).hostname.replace("www.", "");
+        referrers[domain] = (referrers[domain] || 0) + 1;
+      } catch {
+        referrers["Direct/Unknown"] = (referrers["Direct/Unknown"] || 0) + 1;
+      }
+    } else {
+      referrers["Direct/Unknown"] = (referrers["Direct/Unknown"] || 0) + 1;
+    }
+  });
+
+  return {
+    devices: Object.entries(devices)
+      .filter(([_, count]) => count > 0)
+      .map(([name, value]) => ({ name, value })),
+    referrers: Object.entries(referrers)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, value]) => ({ name, value })),
+  };
+}

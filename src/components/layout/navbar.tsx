@@ -5,6 +5,7 @@ import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
 import { auth, signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
+import { CommandTrigger } from "./command-trigger";
 
 interface NavbarProps {
   variant?: "public" | "admin" | "detail";
@@ -31,6 +32,8 @@ export async function Navbar({ variant = "public" }: NavbarProps) {
         </div>
 
         <div className="flex items-center gap-4">
+          <CommandTrigger />
+          
           {variant === "detail" && (
             <div className="hidden md:block">
               <Logo showText={false} iconClassName="h-8 w-8" />

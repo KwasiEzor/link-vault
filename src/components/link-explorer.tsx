@@ -94,10 +94,14 @@ export function LinkExplorer({
             </div>
             <Input 
               placeholder="Search your knowledge vault..." 
-              className="h-16 pl-14 pr-6 rounded-2xl bg-white/[0.03] border-white/10 focus:bg-white/[0.05] focus:ring-primary/20 transition-all text-lg font-medium placeholder:text-muted-foreground/30 shadow-2xl"
+              className="h-16 pl-14 pr-16 rounded-2xl bg-white/[0.03] border-white/10 focus:bg-white/[0.05] focus:ring-primary/20 transition-all text-lg font-medium placeholder:text-muted-foreground/30 shadow-2xl"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+            <div className="absolute right-5 top-1/2 -translate-y-1/2 hidden sm:flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-muted-foreground/40 text-[10px] font-mono pointer-events-none">
+              <span>⌘</span>
+              <span>K</span>
+            </div>
           </div>
         </div>
 

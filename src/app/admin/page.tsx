@@ -5,10 +5,11 @@ import { AddLinkForm } from "@/components/admin/add-link-form";
 import { LinkList } from "@/components/admin/link-list";
 import { AdminStats } from "@/components/admin/admin-stats";
 import { AnalyticsChart } from "@/components/admin/analytics-chart";
+import { AnalyticsBreakdown } from "@/components/admin/analytics-breakdown";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { getLinks } from "@/app/actions/links";
-import { getAnalyticsData, getTotalClicks } from "@/app/actions/analytics";
+import { getAnalyticsData, getTotalClicks, getBreakdownData } from "@/app/actions/analytics";
 
 type LinkListItem = {
   id: string;
@@ -37,7 +38,7 @@ export default async function AdminPage() {
   const sevenDaysAgo = new Date();
   sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-  const [initialData, totalLinks, totalClicks, categoriesData, recentLinksCount, analyticsData] = await Promise.all([
+  const [initialData, totalLinks, totalClicks, categoriesData, recentLinksCount, analyticsData, breakdownData] = await Promise.all([
     getLinks({ userId, limit: 15 }),
     prisma.link.count({ where: { userId } }),
     getTotalClicks(userId),
@@ -54,6 +55,7 @@ export default async function AdminPage() {
       },
     }),
     getAnalyticsData(userId),
+    getBreakdownData(userId),
   ]);
 
   const allCategories = categoriesData
@@ -85,6 +87,11 @@ export default async function AdminPage() {
           />
 
           <AnalyticsChart data={analyticsData} />
+
+          <AnalyticsBreakdown 
+            devices={breakdownData.devices} 
+            referrers={breakdownData.referrers} 
+          />
 
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
             <LinkList 
