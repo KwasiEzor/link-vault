@@ -4,6 +4,19 @@ import { LogIn, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";
+import type { Metadata } from "next";
+
+export async function generateMetadata(
+  { searchParams }: { searchParams: Promise<{ q?: string; c?: string }> }
+): Promise<Metadata> {
+  const { q, c } = await searchParams;
+  const title = c && c !== "all" ? `${c} Assets | LinkVault` : q ? `Search: ${q} | LinkVault` : "LinkVault | Personal Link Manager";
+  
+  return {
+    title,
+    description: "A minimalist workspace for curated digital resources.",
+  };
+}
 
 export default async function Home() {
   const { links, nextCursor } = await getLinks({ limit: 9 });
