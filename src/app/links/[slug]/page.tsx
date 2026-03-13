@@ -5,16 +5,16 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { 
   ExternalLink, 
-  ArrowLeft, 
   Calendar, 
   Tag, 
   Globe, 
-  Share2,
-  Sparkles
+  Share2
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Metadata } from "next";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -44,30 +44,13 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
   const hostname = new URL(link.url).hostname.replace("www.", "");
 
   return (
-    <div className="min-h-screen bg-background text-foreground pb-20">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Background Ambience */}
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background opacity-50" />
 
-      {/* Navigation Header */}
-      <header className="sticky top-0 z-50 bg-background/5 backdrop-blur-xl border-b border-white/5">
-        <div className="container mx-auto px-6 h-16 flex items-center justify-between">
-          <Link 
-            href="/" 
-            className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors group"
-          >
-            <ArrowLeft className="h-4 w-4 group-hover:-translate-x-1 transition-transform" />
-            Back to Vault
-          </Link>
-          <div className="flex items-center gap-2">
-            <div className="h-8 w-8 rounded-lg bg-primary/20 flex items-center justify-center text-primary">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <span className="font-black text-sm tracking-tighter uppercase">Link<span className="text-primary">Vault</span></span>
-          </div>
-        </div>
-      </header>
+      <Navbar variant="detail" />
 
-      <main className="container mx-auto px-6 py-12 max-w-6xl">
+      <main className="container mx-auto px-6 py-12 max-w-6xl min-h-[calc(100vh-200px)]">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           
           {/* Main Content Area */}
@@ -192,6 +175,8 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
 
         </div>
       </main>
+
+      <Footer />
     </div>
   );
 }
