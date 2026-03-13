@@ -1,4 +1,4 @@
-import { getLinks } from "@/app/actions/links";
+import { getLinks, getCategories } from "@/app/actions/links";
 import { LinkExplorer } from "@/components/link-explorer";
 import { LogIn, Sparkles } from "lucide-react";
 import Link from "next/link";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 export default async function Home() {
   const { links, nextCursor } = await getLinks({ limit: 9 });
+  const categories = await getCategories();
 
   return (
     <div className="min-h-screen text-foreground selection:bg-primary/30">
@@ -78,7 +79,11 @@ export default async function Home() {
         </section>
 
         {/* Links Grid */}
-        <LinkExplorer initialLinks={links} initialNextCursor={nextCursor} />
+        <LinkExplorer 
+          initialLinks={links} 
+          initialNextCursor={nextCursor} 
+          initialCategories={categories} 
+        />
       </main>
 
       {/* Footer */}

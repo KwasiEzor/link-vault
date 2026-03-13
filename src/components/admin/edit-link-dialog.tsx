@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2, Link2, Sparkles, Pencil } from "lucide-react";
-import { updateLink } from "@/app/actions/links";
+import { updateLink, getCategories } from "@/app/actions/links";
 import { toast } from "sonner";
 
 type Link = {
@@ -36,6 +36,7 @@ export function EditLinkDialog({
   onOpenChange: (open: boolean) => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: link.title,
     description: link.description || "",
@@ -43,6 +44,12 @@ export function EditLinkDialog({
     url: link.url,
     image: link.image || "",
   });
+
+  useEffect(() => {
+    if (open) {
+      getCategories().then(setExistingCategories);
+    }
+  }, [open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,7 +121,13 @@ export function EditLinkDialog({
                     className="h-12 bg-white/5 border-white/5 focus:bg-white/10 focus:ring-primary/20 transition-all rounded-xl"
                     value={formData.category}
                     onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    list="edit-category-suggestions"
                   />
+                  <datalist id="edit-category-suggestions">
+                    {existingCategories.map((cat) => (
+                      <option key={cat} value={cat} />
+                    ))}
+                  </datalist>
                 </div>
                 <div className="space-y-3">
                   <Label htmlFor="url" className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground ml-1">

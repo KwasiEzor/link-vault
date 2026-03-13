@@ -129,3 +129,16 @@ export async function getLinks(options?: {
     nextCursor,
   };
 }
+
+export async function getCategories() {
+  const categories = await prisma.link.findMany({
+    select: {
+      category: true,
+    },
+    distinct: ["category"],
+  });
+
+  return Array.from(new Set(categories
+    .map((c) => c.category)
+    .filter((c): c is string => !!c)));
+}

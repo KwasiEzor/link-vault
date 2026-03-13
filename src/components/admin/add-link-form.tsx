@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Link2, Sparkles, AlertCircle } from "lucide-react";
-import { addLink } from "@/app/actions/links";
+import { addLink, getCategories } from "@/app/actions/links";
 import { toast } from "sonner";
 import { linkSchema, type LinkInput } from "@/lib/schemas";
 import Image from "next/image";
@@ -26,6 +26,7 @@ export function AddLinkForm() {
   const [loading, setLoading] = useState(false);
   const [fetchingMetadata, setFetchingMetadata] = useState(false);
   const [metadata, setMetadata] = useState<{ title: string; image: string | null; description: string | null } | null>(null);
+  const [existingCategories, setExistingCategories] = useState<string[]>([]);
 
   const {
     register,
@@ -40,6 +41,13 @@ export function AddLinkForm() {
       category: "general",
     },
   });
+
+  // Fetch existing categories when dialog opens
+  useEffect(() => {
+    if (open) {
+      getCategories().then(setExistingCategories);
+    }
+  }, [open]);
 
   const urlValue = watch("url");
 
@@ -174,9 +182,15 @@ export function AddLinkForm() {
                 <Input
                   id="category"
                   {...register("category")}
+                  list="category-suggestions"
                   placeholder="e.g. Design, Research, Tools"
                   className="h-12 bg-white/5 border-white/5 focus:bg-white/10 focus:ring-primary/20 transition-all rounded-xl placeholder:text-muted-foreground/40"
                 />
+                <datalist id="category-suggestions">
+                  {existingCategories.map((cat) => (
+                    <option key={cat} value={cat} />
+                  ))}
+                </datalist>
               </div>
             </div>
           </div>

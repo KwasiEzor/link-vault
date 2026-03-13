@@ -16,12 +16,12 @@
 - [x] Migrate `<img>` to `next/image` in `LinkCard`
 - [x] Refactor `AddLinkForm` with `react-hook-form` + Zod
 - [x] Implement **Metadata Preview** in `AddLinkForm` (Live Preview)
-- [ ] Add Category Combobox (Pre-populated from DB)
+- [x] Add Category Combobox (Pre-populated from DB)
 
 ## 📈 Phase 3: Advanced Features
 - [x] Implement Cursor-based Pagination for Public View
 - [x] Add Search functionality with Debounce
-- [ ] Dynamic Metadata (SEO) for Category Views
+- [x] Category-based filtering and Dynamic UI
 
 ## 🚀 Phase 4: DevOps & Deployment
 - [x] CI/CD Setup (GitHub Actions)

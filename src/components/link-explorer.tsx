@@ -15,39 +15,43 @@ type Link = {
   image: string | null;
   category: string | null;
 };
-
+import { getLinks, getCategories } from "@/app/actions/links";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+...
 export function LinkExplorer({ 
   initialLinks, 
-  initialNextCursor 
+  initialNextCursor,
+  initialCategories
 }: { 
   initialLinks: Link[], 
-  initialNextCursor?: string 
+  initialNextCursor?: string,
+  initialCategories: string[]
 }) {
   const [links, setLinks] = useState<Link[]>(initialLinks);
   const [nextCursor, setNextCursor] = useState<string | undefined>(initialNextCursor);
   const [search, setSearch] = useState("");
+  const [category, setCategory] = useState("all");
   const [isPending, startTransition] = useTransition();
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-
-  // Debounced search
+...
+  // Debounced search and category change
   useEffect(() => {
     const timer = setTimeout(() => {
       startTransition(async () => {
-        const result = await getLinks({ search });
+        const result = await getLinks({ search, category });
         setLinks(result.links);
         setNextCursor(result.nextCursor);
       });
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, category]);
 
   const loadMore = async () => {
     if (!nextCursor || isLoadingMore) return;
-    
+
     setIsLoadingMore(true);
     try {
-      const result = await getLinks({ cursor: nextCursor, search });
+      const result = await getLinks({ cursor: nextCursor, search, category });
       setLinks(prev => [...prev, ...result.links]);
       setNextCursor(result.nextCursor);
     } finally {
@@ -57,17 +61,31 @@ export function LinkExplorer({
 
   return (
     <div className="space-y-12">
-      {/* Search Bar */}
-      <div className="max-w-xl mx-auto relative group">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-          {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+      <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
+        {/* Search Bar */}
+        <div className="w-full max-w-xl relative group">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
+            {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+          </div>
+          <Input 
+            placeholder="Search your vault..." 
+            className="h-14 pl-12 pr-6 rounded-2xl bg-white/5 border-white/10 focus:bg-white/10 focus:ring-primary/20 transition-all text-lg"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <Input 
-          placeholder="Search your vault..." 
-          className="h-14 pl-12 pr-6 rounded-2xl bg-white/5 border-white/10 focus:bg-white/10 focus:ring-primary/20 transition-all text-lg"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
+
+        {/* Category Filter */}
+        <Tabs value={category} onValueChange={setCategory} className="w-auto">
+          <TabsList className="bg-white/5 border border-white/10 h-14 p-1 rounded-2xl">
+            <TabsTrigger value="all" className="rounded-xl px-6 h-12 data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-bold uppercase tracking-widest text-[10px]">All Assets</TabsTrigger>
+            {initialCategories.slice(0, 4).map(cat => (
+              <TabsTrigger key={cat} value={cat} className="rounded-xl px-6 h-12 data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-bold uppercase tracking-widest text-[10px]">
+                {cat}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </Tabs>
       </div>
 
       {/* Grid */}
