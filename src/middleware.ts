@@ -1,6 +1,9 @@
-import { auth } from "@/auth";
+import NextAuth from "next-auth";
+import { authConfig } from "./auth.config";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+
+const { auth } = NextAuth(authConfig);
 
 export default auth((req: NextRequest & { auth: { user?: { id?: string } } | null }) => {
   const isAuth = !!req.auth;
@@ -11,15 +14,8 @@ export default auth((req: NextRequest & { auth: { user?: { id?: string } } | nul
   }
 
   // Security Headers
-  const requestHeaders = new Headers(req.headers);
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  const response = NextResponse.next();
 
-  // Strict CSP
-  // Note: We allow images from any domain since this is a link curator
   const cspHeader = `
     default-src 'self';
     script-src 'self' 'unsafe-inline' 'unsafe-eval';
@@ -46,13 +42,6 @@ export default auth((req: NextRequest & { auth: { user?: { id?: string } } | nul
 
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api (API routes)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
     "/((?!api|_next/static|_next/image|favicon.ico).*)",
   ],
 };
