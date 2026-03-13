@@ -11,6 +11,8 @@ vi.mock("@/lib/prisma", () => ({
   prisma: {
     link: {
       create: vi.fn(),
+      findUnique: vi.fn(),
+      update: vi.fn(),
     },
   },
 }));
@@ -52,7 +54,8 @@ describe("addLink Action", () => {
     (getMetadata as any).mockResolvedValue(mockMetadata);
 
     const { prisma } = await import("@/lib/prisma");
-    (prisma.link.create as any).mockResolvedValue({ id: "link-1", ...mockMetadata });
+    (prisma.link.findUnique as any).mockResolvedValue(null);
+    (prisma.link.create as any).mockResolvedValue({ id: "link-1", slug: "test-title", ...mockMetadata });
 
     const result = await addLink("https://example.com", "tech");
 
@@ -60,7 +63,8 @@ describe("addLink Action", () => {
     expect(prisma.link.create).toHaveBeenCalledWith(expect.objectContaining({
       data: expect.objectContaining({
         userId: "user-1",
-        category: "tech"
+        category: "tech",
+        slug: "test-title"
       })
     }));
   });

@@ -46,3 +46,11 @@
 - [x] Deep Context Layout (Category, Date, Curator Meta)
 - [x] Interactive Action Sidebar (Visit, Share, Source favicon)
 - [x] Refactored `LinkCard` for Seamless Navigation
+
+## 🔍 Phase 8: SEO Optimization (Slugs)
+- [x] Add `slug` field to Prisma schema
+- [x] Implement `slugify` utility in `src/lib/utils.ts`
+- [x] Update `addLink` to auto-generate unique slugs
+- [x] Migrate routing from `[id]` to `[slug]` for SEO-friendly URLs
+- [x] Add `generateMetadata` for dynamic detail pages
+- [x] Update tests for slug-based lookups

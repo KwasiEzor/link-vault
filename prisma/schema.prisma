@@ -61,6 +61,7 @@ model Link {
   id          String   @id @default(cuid())
   url         String
   title       String
+  slug        String?  @unique
   description String?
   image       String?
   category    String?  @default("general")

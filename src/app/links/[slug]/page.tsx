@@ -1,4 +1,4 @@
-import { getLinkById } from "@/app/actions/links";
+import { getLinkBySlug } from "@/app/actions/links";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -14,10 +14,28 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
+import { Metadata } from "next";
 
-export default async function LinkPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
-  const link = await getLinkById(id);
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params;
+  const link = await getLinkBySlug(slug);
+  
+  if (!link) return { title: "Link Not Found" };
+
+  return {
+    title: `${link.title} | LinkVault`,
+    description: link.description || `Curated resource: ${link.title}`,
+    openGraph: {
+      images: link.image ? [link.image] : [],
+    }
+  };
+}
+
+export default async function LinkPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const link = await getLinkBySlug(slug);
 
   if (!link) {
     notFound();

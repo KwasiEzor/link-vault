@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { getMetadata } from "@/lib/metadata";
 import { revalidatePath } from "next/cache";
 import { linkSchema, updateLinkSchema, type UpdateLinkInput } from "@/lib/schemas";
+import { slugify } from "@/lib/utils";
 
 export async function addLink(url: string, category: string = "general") {
   const validatedFields = linkSchema.safeParse({ url, category });
@@ -26,10 +27,20 @@ export async function addLink(url: string, category: string = "general") {
     throw new Error("Could not fetch metadata for URL");
   }
 
+  const title = metadata.title;
+  let slug = slugify(title);
+
+  // Basic collision check
+  const existing = await prisma.link.findUnique({ where: { slug } });
+  if (existing) {
+    slug = `${slug}-${Math.random().toString(36).substring(2, 5)}`;
+  }
+
   const link = await prisma.link.create({
     data: {
       url: metadata.url || url,
-      title: metadata.title,
+      title,
+      slug,
       description: metadata.description,
       image: metadata.image,
       category: validatedFields.data.category,
@@ -74,12 +85,18 @@ export async function updateLink(id: string, data: UpdateLinkInput) {
     throw new Error("Unauthorized");
   }
 
+  const updateData: any = { ...validatedFields.data };
+  
+  if (updateData.title) {
+    updateData.slug = slugify(updateData.title);
+  }
+
   const link = await prisma.link.update({
     where: {
       id,
       userId: session.user.id,
     },
-    data: validatedFields.data,
+    data: updateData,
   });
 
   revalidatePath("/");
@@ -147,9 +164,9 @@ export async function getCategories() {
     .filter((c): c is string => !!c)));
 }
 
-export async function getLinkById(id: string) {
+export async function getLinkBySlug(slug: string) {
   return prisma.link.findUnique({
-    where: { id },
+    where: { slug },
     include: {
       user: {
         select: {

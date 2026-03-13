@@ -11,6 +11,7 @@ type LinkData = {
   id: string;
   url: string;
   title: string;
+  slug: string | null;
   description: string | null;
   image: string | null;
   category: string | null;
@@ -35,7 +36,7 @@ export function LinkCard({ link }: { link: LinkData }) {
     >
       <Card className="bg-[#020617] border border-white/10 rounded-[24px] overflow-hidden flex flex-col h-full transition-all duration-500 hover:border-white/25 hover:shadow-[0_20px_50px_-12px_rgba(79,70,229,0.4),0_0_20px_-5px_rgba(79,70,229,0.2)] py-0 gap-0">
         <Link 
-          href={`/links/${link.id}`}
+          href={`/links/${link.slug || link.id}`}
           className="relative aspect-[16/9] w-full overflow-hidden block"
         >
           {link.image ? (
@@ -67,7 +68,7 @@ export function LinkCard({ link }: { link: LinkData }) {
           <div className="absolute inset-0 bg-gradient-to-b from-primary/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 -z-10" />
           
           <Link 
-            href={`/links/${link.id}`}
+            href={`/links/${link.slug || link.id}`}
             className="block"
           >
             <h3 className="font-bold text-2xl tracking-tight text-white line-clamp-2 leading-tight transition-all duration-300 group-hover:text-primary-foreground drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
