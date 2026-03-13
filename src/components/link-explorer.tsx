@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import { LinkCard } from "@/components/link-card";
 import { LinkCardSkeleton } from "@/components/link-card-skeleton";
 import { Input } from "@/components/ui/input";
@@ -34,19 +34,38 @@ export function LinkExplorer({
   const [category, setCategory] = useState("all");
   const [isPending, startTransition] = useTransition();
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const isInitialMount = useRef(true);
 
-  // Debounced search and category change
+  // Unified fetcher
+  const fetchData = async (s: string, c: string) => {
+    startTransition(async () => {
+      const result = await getLinks({ search: s, category: c });
+      setLinks(result.links as Link[]);
+      setNextCursor(result.nextCursor);
+    });
+  };
+
+  // Immediate effect for category changes
   useEffect(() => {
+    if (isInitialMount.current) {
+      return;
+    }
+    fetchData(search, category);
+  }, [category]);
+
+  // Debounced effect for search changes
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    
     const timer = setTimeout(() => {
-      startTransition(async () => {
-        const result = await getLinks({ search, category });
-        setLinks(result.links as Link[]);
-        setNextCursor(result.nextCursor);
-      });
+      fetchData(search, category);
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search, category]);
+  }, [search]);
 
   const loadMore = async () => {
     if (!nextCursor || isLoadingMore) return;
@@ -92,7 +111,21 @@ export function LinkExplorer({
 
       {/* Grid */}
       <div className="relative pt-8">
-        {isPending ? (
+        {isPending && links.length > 0 ? (
+          /* Show a semi-transparent overlay over old results to indicate filtering is in progress */
+          <div className="relative">
+            <div className="absolute inset-0 z-10 bg-background/20 backdrop-blur-[1px] rounded-[2.5rem] flex items-center justify-center transition-all duration-300">
+              <div className="bg-background/80 p-4 rounded-2xl border border-white/10 shadow-2xl">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 opacity-40 transition-opacity duration-300">
+              {links.map((link) => (
+                <LinkCard key={link.id} link={link} />
+              ))}
+            </div>
+          </div>
+        ) : isPending ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
             {Array.from({ length: 6 }).map((_, i) => (
               <LinkCardSkeleton key={i} />
