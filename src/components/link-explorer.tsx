@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2, ChevronDown } from "lucide-react";
 import { getLinks } from "@/app/actions/links";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 type Link = {
@@ -52,6 +51,7 @@ export function LinkExplorer({
       return;
     }
     fetchData(search, category);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [category, fetchData]); // Only depend on category
 
   // Debounced effect for search changes
@@ -66,6 +66,7 @@ export function LinkExplorer({
     }, 500);
 
     return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search, fetchData]); // Only depend on search
 
   const loadMore = async () => {

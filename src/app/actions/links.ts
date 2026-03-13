@@ -148,7 +148,11 @@ export async function getLinks(options?: {
     }
   }
 
-  const where: any = {}; // Keep as any for Prisma flexibility with OR and nested conditions
+  const where: {
+    userId?: string;
+    OR?: Array<{ title?: { contains: string }; description?: { contains: string }; url?: { contains: string } }>;
+    category?: string;
+  } = {};
   
   if (userId) {
     where.userId = userId;
@@ -174,18 +178,31 @@ export async function getLinks(options?: {
     orderBy: {
       createdAt: "desc",
     },
+    include: {
+      _count: {
+        select: {
+          clicks: true,
+        },
+      },
+    },
   });
 
   let nextCursor: string | undefined = undefined;
+  let items = links;
   if (links.length > limit) {
     const nextItem = links.pop();
-    nextCursor = nextItem?.id;
+    nextCursor = nextItem!.id;
+    items = links;
   }
 
   return {
-    links,
+    links: items.map(l => ({
+      ...l,
+      clicks: l._count.clicks,
+    })),
     nextCursor,
   };
+
 }
 
 export async function getCategories(userId?: string) {

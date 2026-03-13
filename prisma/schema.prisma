@@ -65,6 +65,20 @@ model Link {
   userId      String
   slug        String?  @unique
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clicks      Click[]
 
   @@index([userId])
+}
+
+model Click {
+  id        String   @id @default(cuid())
+  linkId    String
+  link      Link     @relation(fields: [linkId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  userAgent String?
+  referrer  String?
+  ip        String?
+
+  @@index([linkId])
+  @@index([createdAt])
 }

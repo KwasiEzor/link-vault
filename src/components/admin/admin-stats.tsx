@@ -5,9 +5,10 @@ interface AdminStatsProps {
   totalLinks: number;
   totalCategories: number;
   recentLinksCount: number;
+  totalClicks: number;
 }
 
-export function AdminStats({ totalLinks, totalCategories, recentLinksCount }: AdminStatsProps) {
+export function AdminStats({ totalLinks, totalCategories, recentLinksCount, totalClicks }: AdminStatsProps) {
   const stats = [
     {
       label: "Total Assets",
@@ -26,18 +27,26 @@ export function AdminStats({ totalLinks, totalCategories, recentLinksCount }: Ad
       border: "border-purple-500/20",
     },
     {
-      label: "Recently Added",
-      value: recentLinksCount,
-      sublabel: "Last 7 days",
+      label: "Total Visits",
+      value: totalClicks,
       icon: TrendingUp,
       color: "text-emerald-500",
       bg: "bg-emerald-500/10",
       border: "border-emerald-500/20",
     },
+    {
+      label: "Recent Activity",
+      value: recentLinksCount,
+      sublabel: "New Assets",
+      icon: Link2,
+      color: "text-orange-500",
+      bg: "bg-orange-500/10",
+      border: "border-orange-500/20",
+    },
   ];
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4 duration-1000">
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-in fade-in slide-in-from-top-4 duration-1000">
       {stats.map((stat, i) => (
         <Card key={i} className="glass border-white/5 bg-white/[0.02] hover:bg-white/[0.04] transition-colors group overflow-hidden relative">
           <div className={`absolute top-0 right-0 w-24 h-24 rounded-full blur-3xl opacity-20 -mr-8 -mt-8 ${stat.bg}`} />

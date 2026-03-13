@@ -1,8 +1,9 @@
 import { getLinkBySlug } from "@/app/actions/links";
+import { recordVisit } from "@/app/actions/analytics";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { headers } from "next/headers";
 import { 
   ExternalLink, 
   Calendar, 
@@ -40,6 +41,13 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
   if (!link) {
     notFound();
   }
+
+  // Record analytics visit
+  const headerList = await headers();
+  const userAgent = headerList.get("user-agent") || undefined;
+  const referrer = headerList.get("referer") || undefined;
+  
+  await recordVisit(link.id, { userAgent, referrer });
 
   const hostname = new URL(link.url).hostname.replace("www.", "");
 

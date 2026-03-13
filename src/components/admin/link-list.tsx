@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from "react";
+import { useState, useEffect, useTransition, useCallback, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Trash2, ExternalLink, MoreVertical, Calendar, Tag, Pencil, CheckSquare, Square, Copy, Link2, Loader2, ChevronDown } from "lucide-react";
+import { Trash2, ExternalLink, MoreVertical, Calendar, Tag, Pencil, CheckSquare, Square, Copy, Loader2, ChevronDown, TrendingUp } from "lucide-react";
 import { deleteLink, getLinks } from "@/app/actions/links";
 import { toast } from "sonner";
 import {
@@ -33,6 +33,7 @@ type Link = {
   image: string | null;
   category: string | null;
   createdAt: Date;
+  clicks: number;
 };
 
 interface LinkListProps {
@@ -46,6 +47,7 @@ function FormattedDate({ date }: { date: Date | string }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -77,7 +79,7 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
   const fetchData = useCallback(async (s: string, c: string) => {
     startTransition(async () => {
       const result = await getLinks({ userId, search: s, category: c, limit: 15 });
-      setLinks(result.links as any);
+      setLinks(result.links as Link[]);
       setNextCursor(result.nextCursor);
     });
   }, [userId]);
@@ -97,7 +99,7 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
     setIsLoadingMore(true);
     try {
       const result = await getLinks({ userId, cursor: nextCursor, search, category: categoryFilter, limit: 15 });
-      setLinks(prev => [...prev, ...result.links as any]);
+      setLinks(prev => [...prev, ...result.links as Link[]]);
       setNextCursor(result.nextCursor);
     } finally {
       setIsLoadingMore(false);
@@ -170,6 +172,7 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                 </TableHead>
                 <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Asset</TableHead>
                 <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Category</TableHead>
+                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground text-center">Visits</TableHead>
                 <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Curated</TableHead>
                 <TableHead className="px-6 py-4 text-right font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
               </TableRow>
@@ -211,6 +214,12 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                       <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/20 text-primary border-none text-[10px] font-bold uppercase tracking-tighter">
                         {link.category || "general"}
                       </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-5 text-center">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5">
+                      <TrendingUp className="h-3 w-3 text-emerald-500" />
+                      <span className="text-xs font-black text-white">{link.clicks || 0}</span>
                     </div>
                   </TableCell>
                   <TableCell className="px-6 py-5 text-muted-foreground text-sm font-medium">
