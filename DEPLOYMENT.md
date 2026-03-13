@@ -1,31 +1,30 @@
 # LinkVault: Deployment Guide 🚀
 
-## 1. Database Setup (Neon)
-The project is configured to use **Neon (PostgreSQL)** for production stability.
-1. Create a free PostgreSQL database on [Neon](https://neon.tech/).
-2. Copy the **Connection String** from the Neon dashboard.
-3. Use the `?sslmode=require` parameter in your connection string.
+## 1. Database Setup (Supabase)
+The project is configured to use **Supabase (PostgreSQL)** for production.
+
+1.  Create a new project on [Supabase](https://supabase.com/).
+2.  Go to **Project Settings > Database**.
+3.  Under **Connection string**, select **Prisma** and copy the URL.
+    - **Transaction Mode (Recommended):** Use port `6543` with `?pgbouncer=true`.
+    - **Session Mode:** Use port `5432`.
+4.  Ensure your password is correct. If it contains special characters, you must percent-encode them.
 
 ## 2. Frontend & API (Vercel)
 1. Push your code to a GitHub repository.
 2. Connect the repository to [Vercel](https://vercel.com/).
 3. In **Project Settings > Environment Variables**, add:
-   - `DATABASE_URL`: Your Neon connection string.
+   - `DATABASE_URL`: Your Supabase connection string.
    - `AUTH_SECRET`: Generate with `npx auth secret`.
-   - `AUTH_URL`: Your canonical deployment URL (e.g., `https://vault.yourdomain.com`).
+   - `AUTH_URL`: Your canonical deployment URL.
 
 ## 3. Database Migration
-Since we switched to PostgreSQL, you need to initialize your production schema:
+To initialize your Supabase schema:
 ```bash
-npx prisma migrate dev --name init
-```
-For subsequent updates in production, use:
-```bash
-npx prisma migrate deploy
+npx prisma migrate dev --name init-supabase
 ```
 
-## 4. Why Neon?
-We use the `@neondatabase/serverless` driver with the `PrismaNeon` adapter to ensure:
-- **Connection Pooling:** Built-in to Neon, no need for separate poolers like PgBouncer.
-- **WebSocket Transport:** Faster and more reliable connections from Vercel's serverless functions.
-- **Autoscaling:** Zero-scale when not in use to save on costs.
+## 4. Why Supabase?
+- **Global Availability:** High-performance infrastructure on AWS.
+- **Connection Pooling:** Integrated Supavisor/PgBouncer for serverless scalability.
+- **WASM Engine:** Using Prisma 6.x ensures compatibility with modern edge and serverless runtimes.
