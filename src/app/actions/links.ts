@@ -167,7 +167,8 @@ export async function getCategories() {
 }
 
 export async function getLinkBySlug(slug: string) {
-  return prisma.link.findUnique({
+  // Try finding by slug first, then fallback to ID
+  let link = await prisma.link.findUnique({
     where: { slug },
     include: {
       user: {
@@ -178,4 +179,20 @@ export async function getLinkBySlug(slug: string) {
       },
     },
   });
+
+  if (!link) {
+    link = await prisma.link.findUnique({
+      where: { id: slug }, // 'slug' might actually be an ID from an old URL
+      include: {
+        user: {
+          select: {
+            name: true,
+            image: true,
+          },
+        },
+      },
+    });
+  }
+
+  return link;
 }
