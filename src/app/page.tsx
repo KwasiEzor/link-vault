@@ -5,6 +5,8 @@ import { Footer } from "@/components/layout/footer";
 import Image from "next/image";
 import type { Metadata } from "next";
 
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata(
   { searchParams }: { searchParams: Promise<{ q?: string; c?: string }> }
 ): Promise<Metadata> {

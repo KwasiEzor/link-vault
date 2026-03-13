@@ -51,7 +51,7 @@ export function LinkExplorer({
       return;
     }
     fetchData(search, category);
-  }, [category, search, fetchData]);
+  }, [category, fetchData]); // Only depend on category
 
   // Debounced effect for search changes
   useEffect(() => {
@@ -65,7 +65,7 @@ export function LinkExplorer({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search, category, fetchData]);
+  }, [search, fetchData]); // Only depend on search
 
   const loadMore = async () => {
     if (!nextCursor || isLoadingMore) return;
@@ -110,38 +110,39 @@ export function LinkExplorer({
       </div>
 
       {/* Grid */}
-      <div className="relative pt-8">
-        {isPending && links.length > 0 ? (
-          /* Show a semi-transparent overlay over old results to indicate filtering is in progress */
-          <div className="relative">
-            <div className="absolute inset-0 z-10 bg-background/20 backdrop-blur-[1px] rounded-[2.5rem] flex items-center justify-center transition-all duration-300">
-              <div className="bg-background/80 p-4 rounded-2xl border border-white/10 shadow-2xl">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 opacity-40 transition-opacity duration-300">
-              {links.map((link) => (
-                <LinkCard key={link.id} link={link} />
-              ))}
+      <div className="relative pt-8 min-h-[400px]">
+        {/* Loading Overlay for existing results */}
+        {isPending && links.length > 0 && (
+          <div className="absolute inset-0 z-20 flex items-start justify-center pt-20 bg-background/5 backdrop-blur-[2px] rounded-[2.5rem] transition-all duration-500">
+            <div className="bg-background/80 p-4 rounded-2xl border border-white/10 shadow-2xl animate-in fade-in zoom-in duration-300">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           </div>
-        ) : isPending ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {Array.from({ length: 6 }).map((_, i) => (
+        )}
+
+        {/* Results Grid */}
+        <div className={`
+          grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 transition-all duration-500
+          ${isPending && links.length > 0 ? "opacity-30 blur-[2px] scale-[0.98] pointer-events-none" : "opacity-100 blur-0 scale-100"}
+        `}>
+          {links.map((link) => (
+            <LinkCard key={link.id} link={link} />
+          ))}
+          
+          {/* Skeleton placeholders when switching from empty state */}
+          {isPending && links.length === 0 && (
+            Array.from({ length: 6 }).map((_, i) => (
               <LinkCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : links.length === 0 ? (
-          <div className="text-center py-32 glass rounded-[2.5rem] border-dashed border-white/10 shadow-inner">
+            ))
+          )}
+        </div>
+
+        {/* Empty State */}
+        {!isPending && links.length === 0 && (
+          <div className="text-center py-32 glass rounded-[2.5rem] border-dashed border-white/10 shadow-inner animate-in fade-in slide-in-from-bottom-4 duration-700">
             <p className="text-2xl font-bold text-muted-foreground italic">
               {search ? `No results found for "${search}"` : "Your vault is currently empty."}
             </p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
-            {links.map((link) => (
-              <LinkCard key={link.id} link={link} />
-            ))}
           </div>
         )}
       </div>

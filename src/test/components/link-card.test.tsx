@@ -28,6 +28,7 @@ describe("LinkCard Component", () => {
     description: "The React Framework for the Web.",
     image: "https://nextjs.org/og.png",
     category: "Development",
+    slug: null,
   };
 
   it("renders link title and description", () => {
