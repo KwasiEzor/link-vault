@@ -146,3 +146,17 @@ export async function getCategories() {
     .map((c) => c.category)
     .filter((c): c is string => !!c)));
 }
+
+export async function getLinkById(id: string) {
+  return prisma.link.findUnique({
+    where: { id },
+    include: {
+      user: {
+        select: {
+          name: true,
+          image: true,
+        },
+      },
+    },
+  });
+}
