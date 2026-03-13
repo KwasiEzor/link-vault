@@ -159,6 +159,14 @@ export function CommandMenu() {
 
         <CommandGroup heading="Management" className="px-2">
           <CommandItem
+            onSelect={() => runCommand(() => router.push("/admin/curation"))}
+            className="py-3 px-4 rounded-2xl cursor-pointer hover:bg-white/5"
+          >
+            <Sparkles className="mr-4 h-5 w-5 text-violet-400" />
+            <span className="font-bold">Curator's Lab (AI)</span>
+            <CommandShortcut>G L</CommandShortcut>
+          </CommandItem>
+          <CommandItem
             onSelect={() => runCommand(() => router.push("/admin"))}
             className="py-3 px-4 rounded-2xl cursor-pointer hover:bg-white/5"
           >

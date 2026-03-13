@@ -3,7 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/auth";
 
-export async function recordVisit(linkId: string, metadata: { userAgent?: string, referrer?: string, ip?: string } = {}) {
+export async function recordVisit(linkId: string, metadata: { userAgent?: string, referrer?: string, ip?: string, country?: string } = {}) {
   try {
     await prisma.click.create({
       data: {
@@ -11,10 +11,9 @@ export async function recordVisit(linkId: string, metadata: { userAgent?: string
         userAgent: metadata.userAgent,
         referrer: metadata.referrer,
         ip: metadata.ip,
+        country: metadata.country,
       },
     });
-    // Optional: revalidate path if we show click count on the public page
-    // revalidatePath(`/links/${linkId}`);
   } catch (error) {
     console.error("Failed to record visit:", error);
   }
@@ -100,12 +99,14 @@ export async function getBreakdownData(userId: string) {
     select: {
       userAgent: true,
       referrer: true,
-      ip: true, // We'll use this for a simple geo-estimate if needed, but headers are better
+      ip: true,
+      country: true,
     },
   });
 
   const devices: Record<string, number> = { Mobile: 0, Desktop: 0, Tablet: 0, Other: 0 };
   const referrers: Record<string, number> = {};
+  const countries: Record<string, number> = {};
 
   clicks.forEach((click) => {
     // Basic Device Detection
@@ -114,6 +115,11 @@ export async function getBreakdownData(userId: string) {
     else if (ua.includes("tablet") || ua.includes("ipad")) devices.Tablet++;
     else if (ua.length > 10) devices.Desktop++;
     else devices.Other++;
+
+    // Country Tracking
+    if (click.country) {
+      countries[click.country] = (countries[click.country] || 0) + 1;
+    }
 
     // Referrer Cleaning
     if (click.referrer) {
@@ -133,6 +139,10 @@ export async function getBreakdownData(userId: string) {
       .filter(([_, count]) => count > 0)
       .map(([name, value]) => ({ name, value })),
     referrers: Object.entries(referrers)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5)
+      .map(([name, value]) => ({ name, value })),
+    countries: Object.entries(countries)
       .sort((a, b) => b[1] - a[1])
       .slice(0, 5)
       .map(([name, value]) => ({ name, value })),

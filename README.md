@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🏦 LinkVault | Elite Visual Curation Platform
 
-## Getting Started
+LinkVault is a premium, high-performance visual web bookmarking and curation platform built for power users. It transforms messy URLs into a beautiful, organized knowledge vault using background automation and AI intelligence.
 
-First, run the development server:
+## ✨ High-Level Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+### 🤖 Autonomous AI Curation
+*   **Intelligent Enrichment**: Automatically generates professional summaries and categorizes assets using LLMs (OpenAI/Groq).
+*   **Curator's Lab**: A dedicated "Human-in-the-loop" interface to review, compare, and approve AI-powered refinements.
+*   **Background Workflows**: Powered by **Inngest** for resilient, event-driven metadata scraping and processing.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 📊 Professional Analytics
+*   **Real-time Tracking**: Monitor visitor engagement with precise click tracking.
+*   **Deep Insights**: Interactive charts showing 7-day progression, device distribution (Mobile/Desktop), and top traffic sources.
+*   **Geographic Intelligence**: Capture visitor locations via Edge headers for global reach visualization.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### ⌨️ Power User UX
+*   **Spotlight Command Palette (⌘+K)**: Instant global search, navigation, and quick actions from anywhere in the app.
+*   **Premium Glassmorphic UI**: High-end aesthetic with smooth Framer Motion transitions and Radix UI primitives.
+*   **Near-Instant Creation**: Asynchronous processing ensures adding a link is instantaneous for the user.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 🛡️ Production Resilience
+*   **Link Health Monitor**: Automatic background pings to flag broken or dead links in your vault.
+*   **Hydration-Proof SSR**: Optimized for Next.js 15 with zero hydration mismatches.
+*   **Strict Security**: Zod-validated server actions, session-scoped data access, and rate-limiting.
 
-## Learn More
+## 🛠 Tech Stack
 
-To learn more about Next.js, take a look at the following resources:
+*   **Framework**: Next.js 15 (App Router)
+*   **Language**: TypeScript (100% Coverage)
+*   **Database**: Prisma ORM (SQLite/PostgreSQL)
+*   **Styling**: Tailwind CSS 4 + Framer Motion
+*   **Automation**: Inngest (Background Jobs)
+*   **AI**: OpenAI SDK (Compatible with Groq/Mistral)
+*   **Analytics**: Recharts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚀 Getting Started
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+1.  **Clone & Install**:
+    ```bash
+    git clone https://github.com/KwasiEzor/link-vault.git
+    npm install
+    ```
 
-## Deploy on Vercel
+2.  **Environment Setup**:
+    Create a `.env` file with:
+    ```env
+    DATABASE_URL="file:./dev.db"
+    NEXTAUTH_SECRET="your-secret"
+    AI_API_KEY="your-api-key"
+    ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+3.  **Database Sync**:
+    ```bash
+    npx prisma db push
+    ```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+4.  **Run Development**:
+    ```bash
+    npm run dev           # Main App
+    npm run dev:inngest    # Background Worker UI
+    ```
+
+## 🏁 Progress Tracker
+Detailed implementation milestones can be found in [PROGRESS.md](./PROGRESS.md).
+
+---
+Built with 💎 for curated excellence.

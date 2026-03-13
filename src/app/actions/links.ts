@@ -51,6 +51,7 @@ export async function addLink(url: string, category: string = "general") {
       slug,
       category: validatedFields.data.category,
       userId,
+      enrichmentStatus: "pending",
     },
   });
 
@@ -66,6 +67,73 @@ export async function addLink(url: string, category: string = "general") {
   revalidatePath("/");
   revalidatePath("/admin");
   return link;
+}
+
+export async function reEnrichLink(linkId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const link = await prisma.link.findUnique({
+    where: { id: linkId },
+  });
+
+  if (!link || link.userId !== session.user.id) {
+    throw new Error("Link not found or unauthorized");
+  }
+
+  // Manually dispatch the event to trigger Inngest workflow (Scrape + AI)
+  await prisma.link.update({
+    where: { id: link.id },
+    data: { enrichmentStatus: "pending" }
+  });
+
+  await inngest.send({
+    name: "link.created",
+    data: {
+      linkId: link.id,
+      url: link.url,
+    },
+  });
+
+  return { success: true };
+}
+
+export async function approveEnrichment(linkId: string) {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const link = await prisma.link.findUnique({
+    where: { id: linkId },
+  });
+
+  if (!link || link.userId !== session.user.id) {
+    throw new Error("Link not found or unauthorized");
+  }
+
+  if (!link.aiSummary && !link.aiCategory) {
+    throw new Error("No AI suggestions to approve");
+  }
+
+  await prisma.link.update({
+    where: { id: linkId },
+    data: {
+      description: link.aiSummary || link.description,
+      category: link.aiCategory || link.category,
+      enrichmentStatus: "idle", // Reset status after approval
+      aiSummary: null, // Clear suggestions
+      aiCategory: null,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+  revalidatePath("/admin/curation");
+  
+  return { success: true };
 }
 
 export async function deleteLink(id: string) {

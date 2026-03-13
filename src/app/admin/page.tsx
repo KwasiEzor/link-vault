@@ -91,6 +91,7 @@ export default async function AdminPage() {
           <AnalyticsBreakdown 
             devices={breakdownData.devices} 
             referrers={breakdownData.referrers} 
+            countries={breakdownData.countries}
           />
 
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">

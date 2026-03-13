@@ -46,8 +46,9 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
   const headerList = await headers();
   const userAgent = headerList.get("user-agent") || undefined;
   const referrer = headerList.get("referer") || undefined;
+  const country = headerList.get("x-vercel-ip-country") || undefined;
   
-  await recordVisit(link.id, { userAgent, referrer });
+  await recordVisit(link.id, { userAgent, referrer, country });
 
   const hostname = new URL(link.url).hostname.replace("www.", "");
 

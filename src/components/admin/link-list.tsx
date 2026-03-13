@@ -10,8 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Trash2, ExternalLink, MoreVertical, Calendar, Tag, Pencil, CheckSquare, Square, Copy, Loader2, ChevronDown, TrendingUp } from "lucide-react";
-import { deleteLink, getLinks } from "@/app/actions/links";
+import { Trash2, ExternalLink, MoreVertical, Calendar, Tag, Pencil, CheckSquare, Square, Copy, Loader2, ChevronDown, TrendingUp, AlertTriangle, Sparkles } from "lucide-react";
+import { deleteLink, getLinks, reEnrichLink } from "@/app/actions/links";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -32,6 +32,7 @@ type Link = {
   description: string | null;
   image: string | null;
   category: string | null;
+  status: string | null;
   createdAt: Date;
   clicks: number;
 };
@@ -144,6 +145,14 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
     toast.success("URL copied to clipboard!");
   };
 
+  const handleReEnrich = async (id: string) => {
+    toast.promise(reEnrichLink(id), {
+      loading: "AI is re-analyzing this asset...",
+      success: "Re-enrichment triggered! Metadata will update in a few seconds.",
+      error: "Failed to trigger re-enrichment.",
+    });
+  };
+
   return (
     <div className="space-y-4">
       <SearchAndFilter 
@@ -214,6 +223,12 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                             <span className="text-[8px] font-bold uppercase tracking-tighter text-primary">Scraping</span>
                           </div>
                         )}
+                        {link.status === "broken" && (
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/20">
+                            <AlertTriangle className="h-2.5 w-2.5 text-red-500" />
+                            <span className="text-[8px] font-bold uppercase tracking-tighter text-red-500">Broken</span>
+                          </div>
+                        )}
                       </div>
                       <span className="text-xs text-muted-foreground font-mono truncate opacity-60">
                         {link.url}
@@ -271,6 +286,13 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                           >
                             <Pencil className="mr-2 h-4 w-4 text-primary" />
                             Edit Asset
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            className="font-bold text-indigo-400 focus:bg-indigo-400/10 focus:text-indigo-400 rounded-lg cursor-pointer"
+                            onClick={() => handleReEnrich(link.id)}
+                          >
+                            <Sparkles className="mr-2 h-4 w-4" />
+                            AI Re-Enrich
                           </DropdownMenuItem>
                           <div className="h-px bg-white/5 my-1" />
                           <DropdownMenuItem 

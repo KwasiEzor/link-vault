@@ -23,26 +23,35 @@ const scrapeMetadata = inngest.createFunction(
       return await enrichMetadata(metadata.title, metadata.description, url);
     });
 
-    // Step 3: Update database with both metadata and AI results
+    // Step 3: Update database with both metadata and AI results (Suggestions)
     await step.run("update-link", async () => {
       await prisma.link.update({
         where: { id: linkId },
         data: {
           title: metadata.title,
-          // Use AI summary if available, fallback to original description
-          description: aiResult?.summary || metadata.description,
+          // Save original metadata
+          description: metadata.description,
           image: metadata.image,
-          // Use AI category if available, maintain original otherwise
-          category: aiResult?.category || undefined,
+          // Save AI suggestions separately
+          aiSummary: aiResult?.summary,
+          aiCategory: aiResult?.category,
+          enrichmentStatus: aiResult ? "completed" : "failed",
           // Only update URL if we got a canonical one
           url: metadata.url || url,
         },
       });
     });
 
-    // Purge cache for admin and public views
+    // Purge cache
     revalidatePath("/admin");
+    revalidatePath("/admin/curation");
     revalidatePath("/");
+
+    // Fan-out: trigger health check
+    await step.sendEvent("trigger-health-check", {
+      name: "link.health_check",
+      data: { linkId, url },
+    });
 
     return { 
       success: true, 
@@ -52,7 +61,35 @@ const scrapeMetadata = inngest.createFunction(
   }
 );
 
+const checkLinkHealth = inngest.createFunction(
+  { id: "check-link-health", name: "Check Link Health" },
+  { event: "link.health_check" },
+  async ({ event, step }) => {
+    const { linkId, url } = event.data;
+
+    const isAlive = await step.run("ping-url", async () => {
+      try {
+        const res = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(5000) });
+        return res.ok;
+      } catch {
+        return false;
+      }
+    });
+
+    await step.run("update-status", async () => {
+      await prisma.link.update({
+        where: { id: linkId },
+        data: {
+          status: isAlive ? "active" : "broken",
+        },
+      });
+    });
+
+    return { linkId, url, isAlive };
+  }
+);
+
 export const { GET, POST, PUT } = serve({
   client: inngest,
-  functions: [scrapeMetadata],
+  functions: [scrapeMetadata, checkLinkHealth],
 });

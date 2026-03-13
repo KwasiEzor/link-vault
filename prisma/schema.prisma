@@ -54,18 +54,25 @@ model VerificationToken {
 }
 
 model Link {
-  id          String   @id @default(cuid())
-  url         String
-  title       String
-  description String?
-  image       String?
-  category    String?  @default("general")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  userId      String
-  slug        String?  @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  clicks      Click[]
+  id              String   @id @default(cuid())
+  url             String
+  title           String
+  description     String?
+  image           String?
+  category        String?  @default("general")
+  status          String?  @default("active")
+  
+  // AI Suggestions (The "Back-end" of enrichment)
+  aiSummary       String?
+  aiCategory      String?
+  enrichmentStatus String? @default("idle") // idle, pending, completed, failed
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  slug            String?  @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  clicks          Click[]
 
   @@index([userId])
 }
@@ -78,6 +85,7 @@ model Click {
   userAgent String?
   referrer  String?
   ip        String?
+  country   String?
 
   @@index([linkId])
   @@index([createdAt])

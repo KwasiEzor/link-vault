@@ -1,13 +1,22 @@
 import OpenAI from "openai";
 
-const apiKey = process.env.AI_API_KEY;
-// Default to Groq or similar if provided, else standard OpenAI
-const baseURL = process.env.AI_BASE_URL || "https://api.openai.com/v1";
+let openaiInstance: OpenAI | null = null;
 
-const openai = apiKey ? new OpenAI({
-  apiKey,
-  baseURL,
-}) : null;
+function getOpenAI() {
+  if (openaiInstance) return openaiInstance;
+  
+  const apiKey = process.env.AI_API_KEY;
+  const baseURL = process.env.AI_BASE_URL || "https://api.openai.com/v1";
+
+  if (!apiKey) return null;
+
+  openaiInstance = new OpenAI({
+    apiKey,
+    baseURL,
+  });
+  
+  return openaiInstance;
+}
 
 export type AIEnrichmentResult = {
   category: string;
@@ -15,6 +24,7 @@ export type AIEnrichmentResult = {
 };
 
 export async function enrichMetadata(title: string, description: string | null, url: string): Promise<AIEnrichmentResult | null> {
+  const openai = getOpenAI();
   if (!openai) {
     console.warn("AI_API_KEY is not set. Skipping AI enrichment.");
     return null;
