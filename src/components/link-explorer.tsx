@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { LinkCard } from "@/components/link-card";
+import { LinkCardSkeleton } from "@/components/link-card-skeleton";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2, ChevronDown } from "lucide-react";
@@ -90,7 +91,13 @@ export function LinkExplorer({
 
       {/* Grid */}
       <div className="relative pt-8">
-        {links.length === 0 ? (
+        {isPending ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <LinkCardSkeleton key={i} />
+            ))}
+          </div>
+        ) : links.length === 0 ? (
           <div className="text-center py-32 glass rounded-[2.5rem] border-dashed border-white/10 shadow-inner">
             <p className="text-2xl font-bold text-muted-foreground italic">
               {search ? `No results found for "${search}"` : "Your vault is currently empty."}

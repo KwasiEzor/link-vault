@@ -4,7 +4,7 @@ import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
 import { getMetadata } from "@/lib/metadata";
 import { revalidatePath } from "next/cache";
-import { linkSchema, updateLinkSchema } from "@/lib/schemas";
+import { linkSchema, updateLinkSchema, type UpdateLinkInput } from "@/lib/schemas";
 
 export async function addLink(url: string, category: string = "general") {
   const validatedFields = linkSchema.safeParse({ url, category });
@@ -60,11 +60,12 @@ export async function deleteLink(id: string) {
   revalidatePath("/admin");
 }
 
-export async function updateLink(id: string, data: any) {
+export async function updateLink(id: string, data: UpdateLinkInput) {
   const validatedFields = updateLinkSchema.safeParse(data);
 
   if (!validatedFields.success) {
-    throw new Error(validatedFields.error.errors[0]?.message || "Validation failed");
+    const errorMsg = validatedFields.error.issues[0]?.message || "Validation failed";
+    throw new Error(errorMsg);
   }
 
   const session = await auth();
@@ -94,7 +95,10 @@ export async function getLinks(options?: {
 }) {
   const { cursor, limit = 9, search, category } = options || {};
 
-  const where: any = {};
+  const where: {
+    OR?: Array<{ title?: { contains: string }; description?: { contains: string }; url?: { contains: string } }>;
+    category?: string;
+  } = {};
   
   if (search) {
     where.OR = [
