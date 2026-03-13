@@ -7,24 +7,24 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Search, Loader2, ChevronDown } from "lucide-react";
 import { getLinks } from "@/app/actions/links";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Link = {
   id: string;
   url: string;
   title: string;
+  slug: string | null;
   description: string | null;
   image: string | null;
   category: string | null;
 };
-import { getLinks, getCategories } from "@/app/actions/links";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-...
+
 export function LinkExplorer({ 
   initialLinks, 
   initialNextCursor,
   initialCategories
 }: { 
-  initialLinks: Link[], 
+  initialLinks: any[], 
   initialNextCursor?: string,
   initialCategories: string[]
 }) {
@@ -33,13 +33,14 @@ export function LinkExplorer({
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
   const [isPending, startTransition] = useTransition();
-...
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+
   // Debounced search and category change
   useEffect(() => {
     const timer = setTimeout(() => {
       startTransition(async () => {
         const result = await getLinks({ search, category });
-        setLinks(result.links);
+        setLinks(result.links as Link[]);
         setNextCursor(result.nextCursor);
       });
     }, 500);
@@ -53,7 +54,7 @@ export function LinkExplorer({
     setIsLoadingMore(true);
     try {
       const result = await getLinks({ cursor: nextCursor, search, category });
-      setLinks(prev => [...prev, ...result.links]);
+      setLinks(prev => [...prev, ...result.links as Link[]]);
       setNextCursor(result.nextCursor);
     } finally {
       setIsLoadingMore(false);
