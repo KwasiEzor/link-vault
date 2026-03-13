@@ -7,14 +7,14 @@ import {
   ExternalLink, 
   Calendar, 
   Tag, 
-  Globe, 
-  Share2
+  Globe
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import { ShareButton } from "@/components/share-button";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -136,10 +136,12 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
                   </a>
                   
                   <div className="grid grid-cols-2 gap-4">
-                    <Button variant="outline" className="h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold group">
-                      <Share2 className="mr-2 h-4 w-4 group-hover:text-primary transition-colors" />
-                      Share
-                    </Button>
+                    <ShareButton 
+                      url={link.url}
+                      title={link.title}
+                      description={link.description || undefined}
+                      variant="full"
+                    />
                     <Link 
                       href={link.url}
                       target="_blank"

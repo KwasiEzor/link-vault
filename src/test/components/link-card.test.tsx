@@ -7,6 +7,10 @@ import { toast } from "sonner";
 vi.mock("lucide-react", () => ({
   ExternalLink: () => <div data-testid="external-link" />,
   Share2: () => <div data-testid="share-icon" />,
+  Copy: () => <div data-testid="copy-icon" />,
+  Twitter: () => <div data-testid="twitter-icon" />,
+  Linkedin: () => <div data-testid="linkedin-icon" />,
+  Facebook: () => <div data-testid="facebook-icon" />,
 }));
 
 vi.mock("sonner", () => ({
@@ -42,7 +46,7 @@ describe("LinkCard Component", () => {
     expect(screen.getByText("nextjs.org")).toBeInTheDocument();
   });
 
-  it("copies link to clipboard when share icon clicked", async () => {
+  it("copies link to clipboard when Copy Link option clicked in share menu", async () => {
     // Mock clipboard
     const writeText = vi.fn().mockResolvedValue(undefined);
     Object.assign(navigator, {
@@ -52,8 +56,11 @@ describe("LinkCard Component", () => {
     });
 
     render(<LinkCard link={mockLink} />);
-    const shareButton = screen.getByTitle("Copy link");
-    fireEvent.click(shareButton);
+    const shareTrigger = screen.getByTitle("Share");
+    fireEvent.click(shareTrigger);
+
+    const copyOption = screen.getByText("Copy Link");
+    fireEvent.click(copyOption);
 
     expect(writeText).toHaveBeenCalledWith(mockLink.url);
     expect(toast.success).toHaveBeenCalledWith("Link copied to clipboard!");

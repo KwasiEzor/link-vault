@@ -1,11 +1,11 @@
 "use client";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { ExternalLink, Share2 } from "lucide-react";
-import { toast } from "sonner";
+import { ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
+import { ShareButton } from "@/components/share-button";
 
 type LinkData = {
   id: string;
@@ -18,11 +18,6 @@ type LinkData = {
 };
 
 export function LinkCard({ link }: { link: LinkData }) {
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(link.url);
-    toast.success("Link copied to clipboard!");
-  };
-
   const hostname = new URL(link.url).hostname.replace('www.', '');
 
   return (
@@ -96,13 +91,12 @@ export function LinkCard({ link }: { link: LinkData }) {
             </span>
           </div>
           <div className="flex items-center gap-4">
-            <button 
-              onClick={copyToClipboard}
-              className="text-slate-400 hover:text-white transition-colors"
-              title="Copy link"
-            >
-              <Share2 className="h-5 w-5" />
-            </button>
+            <ShareButton 
+              url={link.url}
+              title={link.title}
+              description={link.description || undefined}
+              variant="icon"
+            />
             <a 
               href={link.url} 
               target="_blank" 

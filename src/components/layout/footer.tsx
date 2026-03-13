@@ -38,7 +38,7 @@ export function Footer() {
                 <Link href="/login" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Admin Console</Link>
               </li>
               <li>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Documentation</Link>
+                <Link href="/docs" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Documentation</Link>
               </li>
             </ul>
           </div>
@@ -48,13 +48,13 @@ export function Footer() {
             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Legal</h4>
             <ul className="space-y-4">
               <li>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Privacy Policy</Link>
+                <Link href="/privacy" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Privacy Policy</Link>
               </li>
               <li>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Terms of Service</Link>
+                <Link href="/terms" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Terms of Service</Link>
               </li>
               <li>
-                <Link href="#" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Cookie Policy</Link>
+                <Link href="/cookies" className="text-sm text-muted-foreground hover:text-white transition-colors font-medium">Cookie Policy</Link>
               </li>
             </ul>
           </div>

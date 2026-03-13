@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useMemo, useTransition, useCallback, useRef } from "react";
 import {
   Table,
   TableBody,
@@ -10,8 +10,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Trash2, ExternalLink, MoreVertical, Calendar, Tag, Pencil } from "lucide-react";
-import { deleteLink } from "@/app/actions/links";
+import { Trash2, ExternalLink, MoreVertical, Calendar, Tag, Pencil, CheckSquare, Square, Copy, Link2, Loader2, ChevronDown } from "lucide-react";
+import { deleteLink, getLinks } from "@/app/actions/links";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -22,6 +22,8 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { EditLinkDialog } from "./edit-link-dialog";
+import { BulkActions } from "./bulk-actions";
+import { SearchAndFilter } from "./search-and-filter";
 
 type Link = {
   id: string;
@@ -33,114 +35,283 @@ type Link = {
   createdAt: Date;
 };
 
-export function LinkList({ links }: { links: Link[] }) {
-  const [loading, setLoading] = useState<string | null>(null);
+interface LinkListProps {
+  userId: string;
+  initialLinks: Link[];
+  initialNextCursor?: string;
+  categories: string[];
+}
+
+function FormattedDate({ date }: { date: Date | string }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return <span className="opacity-0">...</span>;
+  }
+
+  return (
+    <>{new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>
+  );
+}
+
+export function LinkList({ userId, initialLinks, initialNextCursor, categories }: LinkListProps) {
+  const [links, setLinks] = useState<Link[]>(initialLinks);
+  const [nextCursor, setNextCursor] = useState<string | undefined>(initialNextCursor);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  
+  const [isPending, startTransition] = useTransition();
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  
   const [editingLink, setEditingLink] = useState<Link | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  
+  const isInitialMount = useRef(true);
+
+  // Fetcher for Search & Filter
+  const fetchData = useCallback(async (s: string, c: string) => {
+    startTransition(async () => {
+      const result = await getLinks({ userId, search: s, category: c, limit: 15 });
+      setLinks(result.links as any);
+      setNextCursor(result.nextCursor);
+    });
+  }, [userId]);
+
+  // Effects for Search & Filter
+  useEffect(() => {
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+    const timer = setTimeout(() => fetchData(search, categoryFilter), 500);
+    return () => clearTimeout(timer);
+  }, [search, categoryFilter, fetchData]);
+
+  const loadMore = async () => {
+    if (!nextCursor || isLoadingMore) return;
+    setIsLoadingMore(true);
+    try {
+      const result = await getLinks({ userId, cursor: nextCursor, search, category: categoryFilter, limit: 15 });
+      setLinks(prev => [...prev, ...result.links as any]);
+      setNextCursor(result.nextCursor);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    setSelectedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === links.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(links.map(l => l.id));
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this link?")) return;
     
-    setLoading(id);
+    setIsDeleting(id);
     try {
       await deleteLink(id);
+      setLinks(prev => prev.filter(l => l.id !== id));
       toast.success("Link deleted successfully");
     } catch {
       toast.error("Failed to delete link");
     } finally {
-      setLoading(null);
+      setIsDeleting(null);
     }
   };
 
-  if (links.length === 0) {
-    return (
-      <div className="text-center py-20 glass rounded-[2.5rem] border-dashed border-white/10 shadow-inner">
-        <p className="text-xl font-bold text-muted-foreground italic">No links curated yet.</p>
-        <p className="text-muted-foreground mt-2 opacity-60 font-medium">Add your first asset to see it here.</p>
-      </div>
-    );
-  }
+  const copyUrl = (url: string) => {
+    navigator.clipboard.writeText(url);
+    toast.success("URL copied to clipboard!");
+  };
 
   return (
-    <div className="glass rounded-[1.5rem] border-white/5 shadow-2xl overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-white/5 border-white/5 hover:bg-white/5">
-            <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Asset</TableHead>
-            <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Category</TableHead>
-            <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Curated</TableHead>
-            <TableHead className="px-6 py-4 text-right font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {links.map((link) => (
-            <TableRow key={link.id} className="border-white/5 hover:bg-white/[0.02] group transition-colors">
-              <TableCell className="px-6 py-5">
-                <div className="flex flex-col gap-0.5">
-                  <span className="font-bold text-base tracking-tight group-hover:text-primary transition-colors line-clamp-1">
-                    {link.title}
-                  </span>
-                  <span className="text-xs text-muted-foreground font-mono truncate max-w-[300px] opacity-60">
-                    {link.url}
-                  </span>
-                </div>
-              </TableCell>
-              <TableCell className="px-6 py-5">
-                <div className="flex items-center gap-2">
-                  <Tag className="h-3 w-3 text-primary opacity-50" />
-                  <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/20 text-primary border-none text-[10px] font-bold uppercase tracking-tighter">
-                    {link.category || "general"}
-                  </Badge>
-                </div>
-              </TableCell>
-              <TableCell className="px-6 py-5 text-muted-foreground text-sm font-medium">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-3 w-3 opacity-40" />
-                  {new Date(link.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
-                </div>
-              </TableCell>
-              <TableCell className="px-6 py-5 text-right">
-                <div className="flex justify-end gap-1">
-                  <a 
-                    href={link.url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10")}
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger
-                      render={
-                        <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-white/5">
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      }
-                    />
-                    <DropdownMenuContent align="end" className="glass border-white/10 min-w-[160px]">
-                      <DropdownMenuItem 
-                        className="text-destructive focus:bg-destructive/10 focus:text-destructive font-medium"
-                        onClick={() => handleDelete(link.id)}
-                        disabled={loading === link.id}
-                        variant="destructive"
+    <div className="space-y-4">
+      <SearchAndFilter 
+        search={search}
+        onSearchChange={setSearch}
+        category={categoryFilter}
+        onCategoryChange={setCategoryFilter}
+        categories={categories}
+      />
+
+      <div className="glass rounded-[2rem] border-white/5 shadow-2xl overflow-hidden relative">
+        {isPending && (
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-background/5 backdrop-blur-[1px]">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        )}
+        
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-white/5 border-white/5 hover:bg-white/5">
+                <TableHead className="w-[50px] px-6 py-4">
+                  <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-primary transition-colors">
+                    {selectedIds.length === links.length && links.length > 0 ? (
+                      <CheckSquare className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Square className="h-5 w-5" />
+                    )}
+                  </button>
+                </TableHead>
+                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Asset</TableHead>
+                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Category</TableHead>
+                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Curated</TableHead>
+                <TableHead className="px-6 py-4 text-right font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {links.map((link) => (
+                <TableRow key={link.id} className={cn(
+                  "border-white/5 hover:bg-white/[0.02] group transition-all duration-300",
+                  selectedIds.includes(link.id) ? "bg-primary/5" : ""
+                )}>
+                  <TableCell className="px-6 py-5">
+                    <button 
+                      onClick={() => toggleSelect(link.id)} 
+                      className={cn(
+                        "transition-colors",
+                        selectedIds.includes(link.id) ? "text-primary" : "text-muted-foreground/40 group-hover:text-muted-foreground"
+                      )}
+                    >
+                      {selectedIds.includes(link.id) ? (
+                        <CheckSquare className="h-5 w-5" />
+                      ) : (
+                        <Square className="h-5 w-5" />
+                      )}
+                    </button>
+                  </TableCell>
+                  <TableCell className="px-6 py-5">
+                    <div className="flex flex-col gap-0.5 max-w-[400px]">
+                      <span className="font-bold text-base tracking-tight group-hover:text-primary transition-colors line-clamp-1">
+                        {link.title}
+                      </span>
+                      <span className="text-xs text-muted-foreground font-mono truncate opacity-60">
+                        {link.url}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-5">
+                    <div className="flex items-center gap-2">
+                      <Tag className="h-3 w-3 text-primary opacity-50" />
+                      <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/20 text-primary border-none text-[10px] font-bold uppercase tracking-tighter">
+                        {link.category || "general"}
+                      </Badge>
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-5 text-muted-foreground text-sm font-medium">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="h-3 w-3 opacity-40" />
+                      <FormattedDate date={link.createdAt} />
+                    </div>
+                  </TableCell>
+                  <TableCell className="px-6 py-5 text-right">
+                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button 
+                        onClick={() => copyUrl(link.url)}
+                        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10")}
+                        title="Copy URL"
                       >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        {loading === link.id ? "Removing..." : "Remove Asset"}
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        className="font-medium"
-                        onClick={() => setEditingLink(link)}
+                        <Copy className="h-4 w-4" />
+                      </button>
+                      <a 
+                        href={link.url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10")}
+                        title="Visit Site"
                       >
-                        <Pencil className="mr-2 h-4 w-4" />
-                        Edit Asset
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+                        <ExternalLink className="h-4 w-4" />
+                      </a>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-white/5">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="glass border-white/10 min-w-[180px] p-2">
+                          <DropdownMenuItem 
+                            className="font-medium rounded-lg cursor-pointer"
+                            onClick={() => setEditingLink(link)}
+                          >
+                            <Pencil className="mr-2 h-4 w-4 text-primary" />
+                            Edit Asset
+                          </DropdownMenuItem>
+                          <div className="h-px bg-white/5 my-1" />
+                          <DropdownMenuItem 
+                            className="text-destructive focus:bg-destructive/10 focus:text-destructive font-bold rounded-lg cursor-pointer"
+                            onClick={() => handleDelete(link.id)}
+                            disabled={isDeleting === link.id}
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            {isDeleting === link.id ? "Removing..." : "Remove Asset"}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </div>
+        
+        {!isPending && links.length === 0 && (
+          <div className="text-center py-20 bg-white/[0.01]">
+            <p className="text-muted-foreground font-medium italic">
+              {search || categoryFilter !== "all" ? "No assets match your search." : "Your vault is currently empty."}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {nextCursor && (
+        <div className="flex justify-center pt-8">
+          <Button 
+            variant="outline" 
+            className="rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold px-8 h-12 transition-all active:scale-95 shadow-xl"
+            onClick={loadMore}
+            disabled={isLoadingMore}
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Curating more...
+              </>
+            ) : (
+              <>
+                <ChevronDown className="mr-2 h-4 w-4" />
+                Load More Assets
+              </>
+            )}
+          </Button>
+        </div>
+      )}
+
+      <BulkActions 
+        selectedIds={selectedIds}
+        onClear={() => setSelectedIds([])}
+        onComplete={() => {
+          setSelectedIds([]);
+          // Refresh data if needed, or rely on local state if we want to be faster
+          // For now, deleteLinks is a server action that revalidates, so we might need to refresh
+          fetchData(search, categoryFilter);
+        }}
+      />
 
       {editingLink && (
         <EditLinkDialog

@@ -79,6 +79,21 @@ export async function deleteLink(id: string) {
   revalidatePath("/admin");
 }
 
+export async function deleteLinks(ids: string[]) {
+  const session = await checkRateLimit();
+  const userId = session.user!.id!;
+
+  await prisma.link.deleteMany({
+    where: {
+      id: { in: ids },
+      userId,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/admin");
+}
+
 export async function updateLink(id: string, data: UpdateLinkInput) {
   const validatedFields = updateLinkSchema.safeParse(data);
 
@@ -119,16 +134,26 @@ export async function updateLink(id: string, data: UpdateLinkInput) {
 export async function getLinks(options?: { 
   cursor?: string; 
   limit?: number; 
-  search?: string;
+  search?: string; 
   category?: string;
+  userId?: string;
 }) {
-  const { cursor, limit = 9, search, category } = options || {};
+  const { cursor, limit = 9, search, category, userId } = options || {};
 
-  const where: {
-    OR?: Array<{ title?: { contains: string }; description?: { contains: string }; url?: { contains: string } }>;
-    category?: string;
-  } = {};
+  // If userId is provided, ensure the caller is authorized to view those links
+  if (userId) {
+    const session = await auth();
+    if (session?.user?.id !== userId) {
+      throw new Error("Unauthorized");
+    }
+  }
+
+  const where: any = {}; // Keep as any for Prisma flexibility with OR and nested conditions
   
+  if (userId) {
+    where.userId = userId;
+  }
+
   if (search) {
     where.OR = [
       { title: { contains: search } },
@@ -142,7 +167,7 @@ export async function getLinks(options?: {
   }
 
   const links = await prisma.link.findMany({
-    take: limit + 1, // Fetch one extra to determine if there is a next page
+    take: limit + 1,
     cursor: cursor ? { id: cursor } : undefined,
     skip: cursor ? 1 : 0,
     where,
@@ -163,8 +188,10 @@ export async function getLinks(options?: {
   };
 }
 
-export async function getCategories() {
+export async function getCategories(userId?: string) {
+  const where = userId ? { userId } : {};
   const categories = await prisma.link.findMany({
+    where,
     select: {
       category: true,
     },

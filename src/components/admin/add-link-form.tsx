@@ -25,7 +25,7 @@ export function AddLinkForm() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetchingMetadata, setFetchingMetadata] = useState(false);
-  const [metadata, setMetadata] = useState<{ title: string; image: string | null; description: string | null } | null>(null);
+  const [metadata, setMetadata] = useState<{ title: string; image: string | null; description: string | null; error?: string } | null>(null);
   const [existingCategories, setExistingCategories] = useState<string[]>([]);
 
   const {
@@ -62,14 +62,25 @@ export function AddLinkForm() {
       setFetchingMetadata(true);
       try {
         const res = await fetch(`/api/metadata?url=${encodeURIComponent(urlValue)}`);
+        const data = await res.json();
+        
         if (res.ok) {
-          const data = await res.json();
           setMetadata(data);
         } else {
-          setMetadata(null);
+          setMetadata({ 
+            title: "Metadata extraction failed", 
+            image: null, 
+            description: data.error || "We couldn't reach this URL.",
+            error: "true"
+          });
         }
       } catch {
-        setMetadata(null);
+        setMetadata({ 
+          title: "Network error", 
+          image: null, 
+          description: "Check your connection and try again.",
+          error: "true"
+        });
       } finally {
         setFetchingMetadata(false);
       }
@@ -111,9 +122,9 @@ export function AddLinkForm() {
           </Button>
         }
       />
-      <DialogContent className="glass border-white/10 sm:max-w-lg overflow-hidden p-0">
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="relative p-8 space-y-8">
+      <DialogContent className="glass border-white/10 sm:max-w-lg p-0 overflow-hidden flex flex-col max-h-[90vh]">
+        <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col overflow-hidden">
+          <div className="relative p-8 space-y-8 overflow-y-auto">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/20 rounded-full blur-3xl -z-10" />
             
             <DialogHeader className="relative">
@@ -152,26 +163,49 @@ export function AddLinkForm() {
               </div>
 
               {/* Metadata Preview Area */}
-              <div className="min-h-[100px] rounded-2xl border border-white/5 bg-white/5 overflow-hidden transition-all duration-500">
+              <div className={`min-h-[100px] rounded-2xl border transition-all duration-500 overflow-hidden ${
+                metadata?.error ? 'border-destructive/20 bg-destructive/5' : 'border-white/5 bg-white/5'
+              }`}>
                 {fetchingMetadata ? (
                   <div className="h-24 flex items-center justify-center gap-3 text-muted-foreground text-sm italic animate-pulse">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     Extracting metadata...
                   </div>
                 ) : metadata ? (
-                  <div className="flex gap-4 p-4 animate-in fade-in zoom-in-95 duration-300">
-                    {metadata.image && (
-                      <div className="relative h-20 w-32 shrink-0 rounded-lg overflow-hidden border border-white/10">
+                  <div className="flex gap-4 p-4 animate-in fade-in zoom-in-95 duration-300 relative group/preview">
+                    {metadata.image && !metadata.error ? (
+                      <div className="relative h-20 w-32 shrink-0 rounded-lg overflow-hidden border border-white/10 shadow-lg">
                         <Image src={metadata.image} alt="" fill className="object-cover" unoptimized />
                       </div>
+                    ) : (
+                      <div className={`relative h-20 w-20 shrink-0 rounded-lg flex items-center justify-center border ${
+                        metadata.error ? 'bg-destructive/10 border-destructive/20 text-destructive' : 'bg-white/5 border-white/10 text-muted-foreground/40'
+                      }`}>
+                        {metadata.error ? <AlertCircle className="h-8 w-8" /> : <Link2 className="h-8 w-8" />}
+                      </div>
                     )}
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <h4 className="font-bold text-sm text-white truncate">{metadata.title}</h4>
-                      <p className="text-xs text-muted-foreground line-clamp-2 mt-1">{metadata.description}</p>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center pr-6">
+                      <h4 className={`font-bold text-sm leading-tight ${metadata.error ? 'text-destructive' : 'text-white'}`}>
+                        {metadata.title}
+                      </h4>
+                      <p className="text-[11px] text-muted-foreground line-clamp-2 mt-1.5 leading-relaxed opacity-80">
+                        {metadata.description || "No description provided by the site."}
+                      </p>
                     </div>
+                    
+                    <button 
+                      type="button"
+                      onClick={() => {
+                        reset({ url: "", category: watch("category") });
+                        setMetadata(null);
+                      }}
+                      className="absolute top-2 right-2 p-1.5 rounded-full bg-white/5 hover:bg-white/10 text-muted-foreground hover:text-white transition-all opacity-0 group-hover/preview:opacity-100"
+                    >
+                      <Plus className="h-3 w-3 rotate-45" />
+                    </button>
                   </div>
                 ) : (
-                  <div className="h-24 flex items-center justify-center text-muted-foreground/30 text-xs font-medium px-8 text-center uppercase tracking-widest">
+                  <div className="h-24 flex items-center justify-center text-muted-foreground/30 text-[10px] font-black px-8 text-center uppercase tracking-[0.2em]">
                     Metadata preview will appear here
                   </div>
                 )}
@@ -197,7 +231,7 @@ export function AddLinkForm() {
             </div>
           </div>
 
-          <DialogFooter className="bg-white/5 p-6 mt-0">
+          <DialogFooter className="bg-white/5 p-6 mt-0 flex-shrink-0 border-t border-white/5">
             <Button type="submit" className="w-full h-12 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 transition-all active:scale-[0.98]" disabled={loading}>
               {loading ? (
                 <>

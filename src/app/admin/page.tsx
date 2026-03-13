@@ -3,18 +3,10 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { AddLinkForm } from "@/components/admin/add-link-form";
 import { LinkList } from "@/components/admin/link-list";
+import { AdminStats } from "@/components/admin/admin-stats";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
-
-type AdminLink = {
-  id: string;
-  url: string;
-  title: string;
-  description: string | null;
-  image: string | null;
-  category: string | null;
-  createdAt: Date;
-};
+import { getLinks } from "@/app/actions/links";
 
 export default async function AdminPage() {
   const session = await auth();
@@ -23,12 +15,32 @@ export default async function AdminPage() {
     redirect("/login");
   }
 
-  const links = session.user?.id 
-    ? await prisma.link.findMany({
-        where: { userId: session.user.id },
-        orderBy: { createdAt: "desc" },
-      })
-    : [];
+  const userId = session.user?.id;
+
+  if (!userId) {
+    redirect("/login");
+  }
+
+  const [initialData, totalLinks, categoriesData, recentLinksCount] = await Promise.all([
+    getLinks({ userId, limit: 15 }),
+    prisma.link.count({ where: { userId } }),
+    prisma.link.groupBy({
+      by: ["category"],
+      where: { userId },
+    }),
+    prisma.link.count({
+      where: {
+        userId,
+        createdAt: {
+          gte: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000),
+        },
+      },
+    }),
+  ]);
+
+  const allCategories = categoriesData
+    .map((c) => c.category)
+    .filter((c): c is string => !!c);
 
   return (
     <div className="min-h-screen bg-background">
@@ -44,8 +56,19 @@ export default async function AdminPage() {
             <AddLinkForm />
           </section>
 
+          <AdminStats 
+            totalLinks={totalLinks}
+            totalCategories={categoriesData.length}
+            recentLinksCount={recentLinksCount}
+          />
+
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <LinkList links={links as unknown as AdminLink[]} />
+            <LinkList 
+              userId={userId}
+              initialLinks={initialData.links as any} 
+              initialNextCursor={initialData.nextCursor}
+              categories={allCategories}
+            />
           </section>
         </div>
       </main>

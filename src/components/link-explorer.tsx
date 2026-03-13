@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Search, Loader2, ChevronDown } from "lucide-react";
 import { getLinks } from "@/app/actions/links";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 type Link = {
   id: string;
@@ -82,31 +83,51 @@ export function LinkExplorer({
 
   return (
     <div className="space-y-12">
-      <div className="flex flex-col md:flex-row gap-6 items-center justify-between">
-        {/* Search Bar */}
-        <div className="w-full max-w-xl relative group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors">
-            {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+      <div className="flex flex-col gap-8">
+        {/* Search Bar - More Focused */}
+        <div className="max-w-2xl mx-auto w-full relative group">
+          <div className="absolute inset-0 bg-primary/5 blur-2xl rounded-full opacity-0 group-focus-within:opacity-100 transition-opacity duration-500" />
+          <div className="relative">
+            <div className="absolute left-5 top-1/2 -translate-y-1/2 text-muted-foreground/50 group-focus-within:text-primary transition-colors duration-300">
+              {isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : <Search className="h-5 w-5" />}
+            </div>
+            <Input 
+              placeholder="Search your knowledge vault..." 
+              className="h-16 pl-14 pr-6 rounded-2xl bg-white/[0.03] border-white/10 focus:bg-white/[0.05] focus:ring-primary/20 transition-all text-lg font-medium placeholder:text-muted-foreground/30 shadow-2xl"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
           </div>
-          <Input 
-            placeholder="Search your vault..." 
-            className="h-14 pl-12 pr-6 rounded-2xl bg-white/5 border-white/10 focus:bg-white/10 focus:ring-primary/20 transition-all text-lg"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
         </div>
 
-        {/* Category Filter */}
-        <Tabs value={category} onValueChange={setCategory} className="w-auto">
-          <TabsList className="bg-white/5 border border-white/10 h-14 p-1 rounded-2xl">
-            <TabsTrigger value="all" className="rounded-xl px-6 h-12 data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-bold uppercase tracking-widest text-[10px]">All Assets</TabsTrigger>
-            {initialCategories.slice(0, 4).map(cat => (
-              <TabsTrigger key={cat} value={cat} className="rounded-xl px-6 h-12 data-[state=active]:bg-primary data-[state=active]:text-white transition-all font-bold uppercase tracking-widest text-[10px]">
-                {cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
+        {/* Category Filter - Modern Pills */}
+        <div className="flex items-center justify-center gap-2 overflow-x-auto pb-4 no-scrollbar">
+          <button
+            onClick={() => setCategory("all")}
+            className={cn(
+              "px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 border whitespace-nowrap",
+              category === "all" 
+                ? "bg-primary border-primary text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]" 
+                : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/10"
+            )}
+          >
+            All
+          </button>
+          {initialCategories.map(cat => (
+            <button
+              key={cat}
+              onClick={() => setCategory(cat)}
+              className={cn(
+                "px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all duration-300 border whitespace-nowrap",
+                category === cat 
+                  ? "bg-primary border-primary text-white shadow-[0_0_20px_rgba(79,70,229,0.4)]" 
+                  : "bg-white/5 border-white/5 text-muted-foreground hover:bg-white/10 hover:border-white/10"
+              )}
+            >
+              {cat}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Grid */}
