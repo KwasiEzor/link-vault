@@ -1,11 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMetadata } from "@/lib/metadata";
 import { auth } from "@/auth";
+import { metadataRateLimiter } from "@/lib/rate-limit";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
-  if (!session) {
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Rate Limiting (10 requests per minute per user)
+  const { isRateLimited } = metadataRateLimiter.check(10, session.user.id);
+  if (isRateLimited) {
+    return NextResponse.json(
+      { error: "Too many requests. Please try again in a minute." },
+      { 
+        status: 429,
+        headers: {
+          'Retry-After': '60',
+        }
+      }
+    );
   }
 
   const { searchParams } = new URL(req.url);

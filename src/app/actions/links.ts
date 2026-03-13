@@ -6,6 +6,20 @@ import { getMetadata } from "@/lib/metadata";
 import { revalidatePath } from "next/cache";
 import { linkSchema, updateLinkSchema, type UpdateLinkInput } from "@/lib/schemas";
 import { slugify } from "@/lib/utils";
+import { actionRateLimiter } from "@/lib/rate-limit";
+
+async function checkRateLimit() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+
+  const { isRateLimited } = actionRateLimiter.check(20, session.user.id);
+  if (isRateLimited) {
+    throw new Error("Action rate limit exceeded. Please try again later.");
+  }
+  return session;
+}
 
 export async function addLink(url: string, category: string = "general") {
   const validatedFields = linkSchema.safeParse({ url, category });
@@ -15,11 +29,7 @@ export async function addLink(url: string, category: string = "general") {
     throw new Error(errorMsg);
   }
 
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const session = await checkRateLimit();
 
   const metadata = await getMetadata(url);
 
@@ -44,7 +54,7 @@ export async function addLink(url: string, category: string = "general") {
       description: metadata.description,
       image: metadata.image,
       category: validatedFields.data.category,
-      userId: session.user.id,
+      userId: session.user.id!,
     },
   });
 
@@ -54,16 +64,12 @@ export async function addLink(url: string, category: string = "general") {
 }
 
 export async function deleteLink(id: string) {
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const session = await checkRateLimit();
 
   await prisma.link.delete({
     where: {
       id,
-      userId: session.user.id,
+      userId: session.user.id!,
     },
   });
 
@@ -79,11 +85,7 @@ export async function updateLink(id: string, data: UpdateLinkInput) {
     throw new Error(errorMsg);
   }
 
-  const session = await auth();
-
-  if (!session?.user?.id) {
-    throw new Error("Unauthorized");
-  }
+  const session = await checkRateLimit();
 
   const updateData: any = { ...validatedFields.data };
   
@@ -94,7 +96,7 @@ export async function updateLink(id: string, data: UpdateLinkInput) {
   const link = await prisma.link.update({
     where: {
       id,
-      userId: session.user.id,
+      userId: session.user.id!,
     },
     data: updateData,
   });

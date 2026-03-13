@@ -54,3 +54,10 @@
 - [x] Migrate routing from `[id]` to `[slug]` for SEO-friendly URLs
 - [x] Add `generateMetadata` for dynamic detail pages
 - [x] Update tests for slug-based lookups
+
+## 🔐 Phase 9: Security Hardening
+- [x] Comprehensive Security Headers (Strict CSP, HSTS, DENY Frame)
+- [x] Rate Limiting for Metadata Scraping API
+- [x] Action Throttling for Link Management
+- [x] Scraped Metadata Sanitization (DOMPurify)
+- [x] Protected API and Server Action access logic
