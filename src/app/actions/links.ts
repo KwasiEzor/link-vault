@@ -2,11 +2,12 @@
 
 import { auth } from "@/auth";
 import { prisma } from "@/lib/prisma";
-import { getMetadata } from "@/lib/metadata";
 import { revalidatePath } from "next/cache";
 import { linkSchema, updateLinkSchema, type UpdateLinkInput } from "@/lib/schemas";
 import { slugify } from "@/lib/utils";
 import { actionRateLimiter } from "@/lib/rate-limit";
+
+import { inngest } from "@/lib/inngest";
 
 async function checkRateLimit() {
   const session = await auth();
@@ -32,30 +33,33 @@ export async function addLink(url: string, category: string = "general") {
   const session = await checkRateLimit();
   const userId = session.user!.id!;
 
-  const metadata = await getMetadata(url);
-
-  if (!metadata) {
-    throw new Error("Could not fetch metadata for URL");
+  // Initial placeholder title based on hostname
+  let hostname = url;
+  try {
+    hostname = new URL(url).hostname;
+  } catch (e) {
+    // Fallback if URL is weird
   }
 
-  const title = metadata.title;
-  let slug = slugify(title);
-
-  // Basic collision check
-  const existing = await prisma.link.findUnique({ where: { slug } });
-  if (existing) {
-    slug = `${slug}-${Math.random().toString(36).substring(2, 5)}`;
-  }
+  const title = hostname;
+  let slug = `${slugify(title)}-${Math.random().toString(36).substring(2, 7)}`;
 
   const link = await prisma.link.create({
     data: {
-      url: metadata.url || url,
+      url,
       title,
       slug,
-      description: metadata.description,
-      image: metadata.image,
       category: validatedFields.data.category,
       userId,
+    },
+  });
+
+  // Dispatch background metadata scraping
+  await inngest.send({
+    name: "link.created",
+    data: {
+      linkId: link.id,
+      url: link.url,
     },
   });
 

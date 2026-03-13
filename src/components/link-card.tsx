@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
@@ -43,8 +43,14 @@ export function LinkCard({ link }: { link: LinkData }) {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="flex items-center justify-center h-full bg-slate-900 text-slate-500 italic">
-              No preview available
+            <div className="flex flex-col items-center justify-center h-full bg-slate-900 gap-2">
+              <div className="relative">
+                <div className="absolute inset-0 blur-xl bg-primary/20 rounded-full animate-pulse" />
+                <Loader2 className="h-8 w-8 text-primary animate-spin relative" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-primary/60 animate-pulse">
+                Auto-Enriching...
+              </span>
             </div>
           )}
           

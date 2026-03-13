@@ -3,6 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { CookieConsent } from "@/components/layout/cookie-consent";
+import { ClientOnly } from "@/components/layout/client-only";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,9 +26,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
+    <html lang="en" className="dark" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased relative min-h-screen`}
+        suppressHydrationWarning
       >
         {/* Premium Background Elements */}
         <div className="fixed inset-0 -z-10 bg-background" />
@@ -35,8 +37,11 @@ export default function RootLayout({
         <div className="fixed inset-0 -z-10 bg-[radial-gradient(circle_at_bottom_right,_var(--tw-gradient-stops))] from-indigo-500/10 via-transparent to-transparent opacity-30" />
         
         {children}
-        <Toaster />
-        <CookieConsent />
+        
+        <ClientOnly>
+          <Toaster />
+          <CookieConsent />
+        </ClientOnly>
       </body>
     </html>
   );

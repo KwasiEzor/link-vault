@@ -47,16 +47,20 @@ function FormattedDate({ date }: { date: Date | string }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
+  const dateObj = new Date(date);
+  
+  // Static placeholder that is valid on both server and client
   if (!mounted) {
-    return <span className="opacity-0">...</span>;
+    return (
+      <span className="inline-block min-w-[80px] h-4 bg-white/5 animate-pulse rounded" />
+    );
   }
 
   return (
-    <>{new Date(date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>
+    <>{dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>
   );
 }
 
@@ -200,9 +204,17 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                   </TableCell>
                   <TableCell className="px-6 py-5">
                     <div className="flex flex-col gap-0.5 max-w-[400px]">
-                      <span className="font-bold text-base tracking-tight group-hover:text-primary transition-colors line-clamp-1">
-                        {link.title}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-base tracking-tight group-hover:text-primary transition-colors line-clamp-1">
+                          {link.title}
+                        </span>
+                        {!link.description && !link.image && (
+                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/5 border border-primary/10 animate-pulse">
+                            <Loader2 className="h-2.5 w-2.5 animate-spin text-primary" />
+                            <span className="text-[8px] font-bold uppercase tracking-tighter text-primary">Scraping</span>
+                          </div>
+                        )}
+                      </div>
                       <span className="text-xs text-muted-foreground font-mono truncate opacity-60">
                         {link.url}
                       </span>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import {
   AreaChart,
   Area,
@@ -17,7 +17,12 @@ interface AnalyticsChartProps {
 }
 
 export function AnalyticsChart({ data }: AnalyticsChartProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const chartData = useMemo(() => data, [data]);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   return (
     <motion.div
@@ -37,49 +42,55 @@ export function AnalyticsChart({ data }: AnalyticsChartProps) {
       </div>
 
       <div className="h-[300px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-            <defs>
-              <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
-                <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
-            <XAxis 
-              dataKey="date" 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
-              dy={10}
-            />
-            <YAxis 
-              axisLine={false} 
-              tickLine={false} 
-              tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
-            />
-            <Tooltip 
-              contentStyle={{ 
-                backgroundColor: "#0f172a", 
-                border: "1px solid #ffffff10", 
-                borderRadius: "16px",
-                boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
-              }}
-              itemStyle={{ color: "#6366f1", fontWeight: 800 }}
-              labelStyle={{ color: "#f8fafc", marginBottom: "4px", fontWeight: 700 }}
-              cursor={{ stroke: '#6366f1', strokeWidth: 2 }}
-            />
-            <Area
-              type="monotone"
-              dataKey="clicks"
-              stroke="#6366f1"
-              strokeWidth={4}
-              fillOpacity={1}
-              fill="url(#colorClicks)"
-              animationDuration={2000}
-            />
-          </AreaChart>
-        </ResponsiveContainer>
+        {isMounted ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorClicks" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="#ffffff10" vertical={false} />
+              <XAxis 
+                dataKey="date" 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+                dy={10}
+              />
+              <YAxis 
+                axisLine={false} 
+                tickLine={false} 
+                tick={{ fill: "#94a3b8", fontSize: 10, fontWeight: 700 }}
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: "#0f172a", 
+                  border: "1px solid #ffffff10", 
+                  borderRadius: "16px",
+                  boxShadow: "0 20px 25px -5px rgb(0 0 0 / 0.1)",
+                }}
+                itemStyle={{ color: "#6366f1", fontWeight: 800 }}
+                labelStyle={{ color: "#f8fafc", marginBottom: "4px", fontWeight: 700 }}
+                cursor={{ stroke: '#6366f1', strokeWidth: 2 }}
+              />
+              <Area
+                type="monotone"
+                dataKey="clicks"
+                stroke="#6366f1"
+                strokeWidth={4}
+                fillOpacity={1}
+                fill="url(#colorClicks)"
+                animationDuration={2000}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+             <div className="w-full h-[200px] bg-white/5 animate-pulse rounded-2xl" />
+          </div>
+        )}
       </div>
     </motion.div>
   );

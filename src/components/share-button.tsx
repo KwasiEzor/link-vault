@@ -65,9 +65,13 @@ export function ShareButton({
     window.open(shareUrl, "_blank", "noopener,noreferrer");
   };
 
-  // If navigator.share is available, we use it as the primary action for icon variant
-  // But for full variant, we might still want the dropdown or a combined approach
-  const canShareNative = typeof navigator !== "undefined" && !!navigator.share;
+  const [canShareNative, setCanShareNative] = React.useState(false);
+
+  React.useEffect(() => {
+    if (typeof navigator !== "undefined" && !!navigator.share) {
+      setCanShareNative(true);
+    }
+  }, []);
 
   if (variant === "icon") {
     return (
