@@ -103,12 +103,14 @@ export function AddLinkForm() {
         setMetadata(null);
       }
     }}>
-      <DialogTrigger asChild>
-        <Button className="rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 group">
-          <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform duration-300" /> 
-          Curate Link
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger
+        render={
+          <Button className="rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-xl shadow-primary/20 transition-all active:scale-95 group">
+            <Plus className="mr-2 h-4 w-4 group-hover:rotate-90 transition-transform duration-300" /> 
+            Curate Link
+          </Button>
+        }
+      />
       <DialogContent className="glass border-white/10 sm:max-w-lg overflow-hidden p-0">
         <form onSubmit={handleSubmit(onSubmit)}>
           <div className="relative p-8 space-y-8">
