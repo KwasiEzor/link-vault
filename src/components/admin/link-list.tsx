@@ -52,18 +52,14 @@ function FormattedDate({ date }: { date: Date | string }) {
   }, []);
 
   const dateObj = new Date(date);
-  
-  // Static placeholder that is valid on both server and client
-  if (!mounted) {
-    return (
-      <span className="inline-block min-w-[80px] h-4 bg-white/5 animate-pulse rounded" />
-    );
-  }
 
   return (
-    <>{dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>
+    <span className={cn("inline-block", !mounted && "min-w-[80px] h-4 bg-white/5 animate-pulse rounded")}>
+      {mounted ? dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : null}
+    </span>
   );
 }
+
 
 export function LinkList({ userId, initialLinks, initialNextCursor, categories }: LinkListProps) {
   const [links, setLinks] = useState<Link[]>(initialLinks);
@@ -174,7 +170,7 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
           <Table>
             <TableHeader>
               <TableRow className="bg-white/5 border-white/5 hover:bg-white/5">
-                <TableHead className="w-[50px] px-6 py-4">
+                <TableHead className="w-[40px] sm:w-[50px] px-3 sm:px-6 py-4">
                   <button onClick={toggleSelectAll} className="text-muted-foreground hover:text-primary transition-colors">
                     {selectedIds.length === links.length && links.length > 0 ? (
                       <CheckSquare className="h-5 w-5 text-primary" />
@@ -183,11 +179,11 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                     )}
                   </button>
                 </TableHead>
-                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Asset</TableHead>
-                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Category</TableHead>
-                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground text-center">Visits</TableHead>
-                <TableHead className="px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Curated</TableHead>
-                <TableHead className="px-6 py-4 text-right font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
+                <TableHead className="px-3 sm:px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Asset</TableHead>
+                <TableHead className="hidden md:table-cell px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Category</TableHead>
+                <TableHead className="hidden lg:table-cell px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground text-center">Visits</TableHead>
+                <TableHead className="hidden sm:table-cell px-6 py-4 font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Curated</TableHead>
+                <TableHead className="px-3 sm:px-6 py-4 text-right font-bold uppercase tracking-widest text-[10px] text-muted-foreground">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -196,7 +192,7 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                   "border-white/5 hover:bg-white/[0.02] group transition-all duration-300",
                   selectedIds.includes(link.id) ? "bg-primary/5" : ""
                 )}>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="px-3 sm:px-6 py-5">
                     <button 
                       onClick={() => toggleSelect(link.id)} 
                       className={cn(
@@ -211,31 +207,37 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                       )}
                     </button>
                   </TableCell>
-                  <TableCell className="px-6 py-5">
-                    <div className="flex flex-col gap-0.5 max-w-[400px]">
+                  <TableCell className="px-3 sm:px-6 py-5">
+                    <div className="flex flex-col gap-0.5 max-w-[200px] sm:max-w-[400px]">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-base tracking-tight group-hover:text-primary transition-colors line-clamp-1">
+                        <span className="font-bold text-sm sm:text-base tracking-tight group-hover:text-primary transition-colors line-clamp-1">
                           {link.title}
                         </span>
                         {!link.description && !link.image && (
-                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-primary/5 border border-primary/10 animate-pulse">
-                            <Loader2 className="h-2.5 w-2.5 animate-spin text-primary" />
-                            <span className="text-[8px] font-bold uppercase tracking-tighter text-primary">Scraping</span>
+                          <div className="flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded-md bg-primary/5 border border-primary/10 animate-pulse">
+                            <Loader2 className="h-2 w-2 sm:h-2.5 sm:w-2.5 animate-spin text-primary" />
+                            <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-tighter text-primary">Scraping</span>
                           </div>
                         )}
                         {link.status === "broken" && (
-                          <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/20">
-                            <AlertTriangle className="h-2.5 w-2.5 text-red-500" />
-                            <span className="text-[8px] font-bold uppercase tracking-tighter text-red-500">Broken</span>
+                          <div className="flex items-center gap-1 px-1 sm:px-1.5 py-0.5 rounded-md bg-red-500/10 border border-red-500/20">
+                            <AlertTriangle className="h-2 w-2 sm:h-2.5 sm:w-2.5 text-red-500" />
+                            <span className="text-[7px] sm:text-[8px] font-bold uppercase tracking-tighter text-red-500">Broken</span>
                           </div>
                         )}
                       </div>
-                      <span className="text-xs text-muted-foreground font-mono truncate opacity-60">
+                      <span className="text-[10px] sm:text-xs text-muted-foreground font-mono truncate opacity-60">
                         {link.url}
                       </span>
+                      {/* Mobile-only category badge */}
+                      <div className="md:hidden mt-1">
+                        <Badge variant="secondary" className="bg-primary/10 text-primary border-none text-[8px] font-bold uppercase h-4 px-1.5">
+                          {link.category || "general"}
+                        </Badge>
+                      </div>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5">
+                  <TableCell className="hidden md:table-cell px-6 py-5">
                     <div className="flex items-center gap-2">
                       <Tag className="h-3 w-3 text-primary opacity-50" />
                       <Badge variant="secondary" className="bg-primary/10 hover:bg-primary/20 text-primary border-none text-[10px] font-bold uppercase tracking-tighter">
@@ -243,35 +245,35 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                       </Badge>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5 text-center">
+                  <TableCell className="hidden lg:table-cell px-6 py-5 text-center">
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white/5 border border-white/5">
                       <TrendingUp className="h-3 w-3 text-emerald-500" />
                       <span className="text-xs font-black text-white">{link.clicks || 0}</span>
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5 text-muted-foreground text-sm font-medium">
+                  <TableCell className="hidden sm:table-cell px-6 py-5 text-muted-foreground text-sm font-medium">
                     <div className="flex items-center gap-2">
                       <Calendar className="h-3 w-3 opacity-40" />
                       <FormattedDate date={link.createdAt} />
                     </div>
                   </TableCell>
-                  <TableCell className="px-6 py-5 text-right">
-                    <div className="flex justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <TableCell className="px-3 sm:px-6 py-5 text-right">
+                    <div className="flex justify-end gap-1 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
                       <button 
                         onClick={() => copyUrl(link.url)}
-                        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10")}
+                        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10")}
                         title="Copy URL"
                       >
-                        <Copy className="h-4 w-4" />
+                        <Copy className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </button>
                       <a 
                         href={link.url} 
                         target="_blank" 
                         rel="noopener noreferrer"
-                        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-9 w-9 text-muted-foreground hover:text-primary hover:bg-primary/10")}
+                        className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "h-8 w-8 sm:h-9 sm:w-9 text-muted-foreground hover:text-primary hover:bg-primary/10")}
                         title="Visit Site"
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </a>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>

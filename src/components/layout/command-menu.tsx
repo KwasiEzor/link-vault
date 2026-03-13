@@ -22,7 +22,8 @@ import {
   ExternalLink,
   Copy,
   TrendingUp,
-  Tags
+  Tags,
+  Sparkles
 } from "lucide-react";
 import { getLinks } from "@/app/actions/links";
 import { toast } from "sonner";
@@ -37,6 +38,7 @@ type Link = {
 };
 
 export function CommandMenu() {
+  const [mounted, setMounted] = React.useState(false);
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [links, setLinks] = React.useState<Link[]>([]);
@@ -44,6 +46,7 @@ export function CommandMenu() {
   const router = useRouter();
 
   React.useEffect(() => {
+    setMounted(true);
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
@@ -57,7 +60,7 @@ export function CommandMenu() {
 
   // Fetch links when search changes or menu opens
   React.useEffect(() => {
-    if (!open) return;
+    if (!open || !mounted) return;
 
     const fetchLinks = async () => {
       setLoading(true);
@@ -73,7 +76,7 @@ export function CommandMenu() {
 
     const timer = setTimeout(fetchLinks, 300);
     return () => clearTimeout(timer);
-  }, [search, open]);
+  }, [search, open, mounted]);
 
   const runCommand = React.useCallback((command: () => void) => {
     setOpen(false);
@@ -84,6 +87,8 @@ export function CommandMenu() {
     navigator.clipboard.writeText(url);
     toast.success("Link copied to clipboard!");
   };
+
+  if (!mounted) return null;
 
   return (
     <CommandDialog 

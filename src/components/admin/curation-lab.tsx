@@ -152,20 +152,20 @@ export function CurationLab({ initialLinks }: { initialLinks: any[] }) {
                   </div>
 
                   {/* Actions Section */}
-                  <div className="lg:col-span-3 p-8 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-col justify-center gap-3">
+                  <div className="lg:col-span-3 p-6 sm:p-8 border-t lg:border-t-0 lg:border-l border-white/5 flex flex-row lg:flex-col justify-center gap-3">
                     <Button 
                         onClick={() => handleApprove(link.id)}
                         disabled={link.enrichmentStatus === "pending"}
-                        className="h-14 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest shadow-xl shadow-primary/10"
+                        className="flex-1 lg:flex-none h-12 sm:h-14 rounded-xl sm:rounded-2xl bg-primary hover:bg-primary/90 text-white font-black uppercase text-[10px] sm:text-xs tracking-widest shadow-xl shadow-primary/10"
                     >
-                        <Check className="mr-2 h-5 w-5" /> Approve
+                        <Check className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Approve
                     </Button>
                     <Button 
                         onClick={() => handleDiscard(link.id)}
                         variant="ghost" 
-                        className="h-14 rounded-2xl text-muted-foreground hover:text-white hover:bg-white/5 font-bold"
+                        className="flex-1 lg:flex-none h-12 sm:h-14 rounded-xl sm:rounded-2xl text-muted-foreground hover:text-white hover:bg-white/5 font-bold text-[10px] sm:text-xs"
                     >
-                        <X className="mr-2 h-5 w-5" /> Discard
+                        <X className="mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Discard
                     </Button>
                   </div>
                 </div>

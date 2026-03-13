@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { motion } from "framer-motion";
 import { Monitor, Smartphone, Tablet, Globe, MapPin } from "lucide-react";
@@ -13,6 +14,12 @@ interface AnalyticsBreakdownProps {
 const COLORS = ["#6366f1", "#8b5cf6", "#d946ef", "#f43f5e"];
 
 export function AnalyticsBreakdown({ devices, referrers, countries }: AnalyticsBreakdownProps) {
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
   return (
     <div className="space-y-8 mt-8">
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -34,29 +41,35 @@ export function AnalyticsBreakdown({ devices, referrers, countries }: AnalyticsB
           </div>
 
           <div className="h-[250px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={devices}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={80}
-                  paddingAngle={5}
-                  dataKey="value"
-                  animationDuration={2000}
-                >
-                  {devices.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(255,255,255,0.05)" />
-                  ))}
-                </Pie>
-                <Tooltip 
-                   contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #ffffff10", borderRadius: "12px" }}
-                   itemStyle={{ color: "#fff", fontWeight: 700 }}
-                />
-                <Legend verticalAlign="bottom" height={36}/>
-              </PieChart>
-            </ResponsiveContainer>
+            {isMounted ? (
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={devices}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={80}
+                    paddingAngle={5}
+                    dataKey="value"
+                    animationDuration={2000}
+                  >
+                    {devices.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} stroke="rgba(255,255,255,0.05)" />
+                    ))}
+                  </Pie>
+                  <Tooltip 
+                     contentStyle={{ backgroundColor: "#0f172a", border: "1px solid #ffffff10", borderRadius: "12px" }}
+                     itemStyle={{ color: "#fff", fontWeight: 700 }}
+                  />
+                  <Legend verticalAlign="bottom" height={36}/>
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="h-32 w-32 rounded-full border-8 border-white/5 animate-pulse" />
+              </div>
+            )}
           </div>
         </motion.div>
 
@@ -91,7 +104,9 @@ export function AnalyticsBreakdown({ devices, referrers, countries }: AnalyticsB
                     <div className="h-1.5 w-32 bg-white/5 rounded-full overflow-hidden hidden sm:block">
                       <motion.div 
                         initial={{ width: 0 }}
-                        animate={{ width: `${(ref.value / Math.max(...referrers.map(r => r.value))) * 100}%` }}
+                        animate={{ 
+                          width: `${referrers[0]?.value ? (ref.value / referrers[0].value) * 100 : 0}%` 
+                        }}
                         transition={{ duration: 1, delay: i * 0.1 }}
                         className="h-full bg-linear-to-r from-primary to-indigo-500"
                       />
@@ -126,15 +141,15 @@ export function AnalyticsBreakdown({ devices, referrers, countries }: AnalyticsB
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
           {countries.length > 0 ? (
             countries.map((country, i) => (
-              <div key={country.name} className="flex flex-col gap-2 p-4 rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
+              <div key={country.name} className="flex flex-col gap-1 sm:gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                 <div className="flex items-center justify-between">
-                  <span className="text-2xl font-black text-white">{country.name}</span>
-                  <span className="text-xs font-bold text-primary">{Math.round((country.value / countries.reduce((acc, c) => acc + c.value, 0)) * 100)}%</span>
+                  <span className="text-xl sm:text-2xl font-black text-white">{country.name}</span>
+                  <span className="text-[10px] sm:text-xs font-bold text-primary">{Math.round((country.value / countries.reduce((acc, c) => acc + c.value, 0)) * 100)}%</span>
                 </div>
-                <div className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                <div className="text-[8px] sm:text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                   {country.value} {country.value === 1 ? 'Visit' : 'Visits'}
                 </div>
               </div>

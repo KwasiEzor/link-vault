@@ -19,7 +19,7 @@ export default async function CurationPage() {
   }
 
   // Fetch all links that have AI suggestions or are pending
-  const enrichedLinks = await prisma.link.findMany({
+  const enrichedLinksRaw = await prisma.link.findMany({
     where: {
       userId,
       OR: [
@@ -31,6 +31,13 @@ export default async function CurationPage() {
       updatedAt: "desc",
     },
   });
+
+  // Serialize dates for Client Component safety
+  const enrichedLinks = enrichedLinksRaw.map(link => ({
+    ...link,
+    createdAt: link.createdAt.toISOString(),
+    updatedAt: link.updatedAt.toISOString(),
+  }));
 
   return (
     <div className="min-h-screen bg-background text-foreground">
