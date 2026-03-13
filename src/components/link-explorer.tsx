@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect, useRef } from "react";
+import { useState, useTransition, useEffect, useRef, useCallback } from "react";
 import { LinkCard } from "@/components/link-card";
 import { LinkCardSkeleton } from "@/components/link-card-skeleton";
 import { Input } from "@/components/ui/input";
@@ -24,7 +24,7 @@ export function LinkExplorer({
   initialNextCursor,
   initialCategories
 }: { 
-  initialLinks: any[], 
+  initialLinks: Link[], 
   initialNextCursor?: string,
   initialCategories: string[]
 }) {
@@ -37,13 +37,13 @@ export function LinkExplorer({
   const isInitialMount = useRef(true);
 
   // Unified fetcher
-  const fetchData = async (s: string, c: string) => {
+  const fetchData = useCallback(async (s: string, c: string) => {
     startTransition(async () => {
       const result = await getLinks({ search: s, category: c });
       setLinks(result.links as Link[]);
       setNextCursor(result.nextCursor);
     });
-  };
+  }, []);
 
   // Immediate effect for category changes
   useEffect(() => {
@@ -51,7 +51,7 @@ export function LinkExplorer({
       return;
     }
     fetchData(search, category);
-  }, [category]);
+  }, [category, search, fetchData]);
 
   // Debounced effect for search changes
   useEffect(() => {
@@ -65,7 +65,7 @@ export function LinkExplorer({
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search]);
+  }, [search, category, fetchData]);
 
   const loadMore = async () => {
     if (!nextCursor || isLoadingMore) return;

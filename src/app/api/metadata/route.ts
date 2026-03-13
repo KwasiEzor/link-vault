@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Could not fetch metadata" }, { status: 404 });
     }
     return NextResponse.json(metadata);
-  } catch (error) {
+  } catch {
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

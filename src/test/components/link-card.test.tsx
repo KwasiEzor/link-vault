@@ -16,6 +16,7 @@ vi.mock("sonner", () => ({
 }));
 
 vi.mock("next/image", () => ({
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   default: ({ src, alt }: any) => <img src={src} alt={alt} />,
 }));
 

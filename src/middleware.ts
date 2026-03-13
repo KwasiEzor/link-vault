@@ -2,7 +2,7 @@ import { auth } from "@/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export default auth((req: NextRequest & { auth: any }) => {
+export default auth((req: NextRequest & { auth: { user?: { id?: string } } | null }) => {
   const isAuth = !!req.auth;
   const isApiAdminRoute = req.nextUrl.pathname.startsWith("/admin");
 

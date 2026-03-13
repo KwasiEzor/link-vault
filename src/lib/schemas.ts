@@ -2,7 +2,7 @@ import { z } from "zod";
 
 export const linkSchema = z.object({
   url: z.string().url("Invalid URL format").min(1, "URL is required"),
-  category: z.string().min(1, "Category is required").default("general"),
+  category: z.string().min(1, "Category is required"),
 });
 
 export const updateLinkSchema = z.object({

@@ -13,25 +13,33 @@ const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 function createPrismaClient(): PrismaClient {
   const connectionString = process.env.DATABASE_URL;
 
-  // If we are in a build environment or missing the URL, 
-  // return a dummy client that doesn't attempt to connect immediately.
-  if (!connectionString || !connectionString.startsWith("postgres")) {
+  if (!connectionString) {
+    console.error("DATABASE_URL is not set in environment variables.");
     return new PrismaClient();
   }
 
-  try {
-    const pool = new Pool({ connectionString });
-    const adapter = new PrismaNeon(pool);
-    return new PrismaClient({ adapter });
-  } catch (error) {
-    console.error("Failed to initialize Prisma with Neon adapter:", error);
-    return new PrismaClient();
+  // If it's a postgres URL, use the Neon adapter
+  if (connectionString.startsWith("postgres")) {
+    try {
+      const pool = new Pool({ connectionString });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const adapter = new PrismaNeon(pool as any);
+      return new PrismaClient({ adapter });
+    } catch (error) {
+      console.error("Neon adapter initialization failed, falling back to default Prisma client:", error);
+    }
   }
+
+  // Fallback: explicitly pass the URL to the constructor to ensure Prisma sees it
+  return new PrismaClient({
+    datasources: {
+      db: {
+        url: connectionString,
+      },
+    },
+  });
 }
 
-// Senior-level initialization: 
-// We export a singleton, but we ensure it's not initialized until actually needed
-// by using the global pattern correctly for Next.js hot-reloading.
 export const prisma = globalForPrisma.prisma || createPrismaClient();
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;

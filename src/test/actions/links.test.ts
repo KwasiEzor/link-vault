@@ -35,6 +35,7 @@ describe("addLink Action", () => {
   });
 
   it("should throw Unauthorized if no session exists", async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (auth as any).mockResolvedValue(null);
 
     await expect(addLink("https://google.com")).rejects.toThrow("Unauthorized");
@@ -42,6 +43,7 @@ describe("addLink Action", () => {
 
   it("should successfully add a link when input is valid", async () => {
     const mockUser = { id: "user-1" };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (auth as any).mockResolvedValue({ user: mockUser });
     
     const mockMetadata = {
@@ -51,10 +53,13 @@ describe("addLink Action", () => {
       url: "https://example.com"
     };
     const { getMetadata } = await import("@/lib/metadata");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (getMetadata as any).mockResolvedValue(mockMetadata);
 
     const { prisma } = await import("@/lib/prisma");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (prisma.link.findUnique as any).mockResolvedValue(null);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (prisma.link.create as any).mockResolvedValue({ id: "link-1", slug: "test-title", ...mockMetadata });
 
     const result = await addLink("https://example.com", "tech");

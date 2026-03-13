@@ -11,11 +11,12 @@ export async function createSafeAction<T>(
   try {
     const data = await action();
     return { success: true, data };
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Action Error:", error);
+    const message = error instanceof Error ? error.message : "An unexpected error occurred";
     return {
       success: false,
-      error: error.message || "An unexpected error occurred",
+      error: message,
     };
   }
 }

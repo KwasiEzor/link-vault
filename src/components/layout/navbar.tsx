@@ -1,5 +1,5 @@
 import { Logo } from "@/components/ui/logo";
-import { LogIn, User, LayoutDashboard, LogOut, ArrowLeft } from "lucide-react";
+import { LogIn, LayoutDashboard, LogOut, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { buttonVariants } from "@/components/ui/button-variants";
 import { cn } from "@/lib/utils";

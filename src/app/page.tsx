@@ -2,6 +2,7 @@ import { getLinks, getCategories } from "@/app/actions/links";
 import { LinkExplorer } from "@/components/link-explorer";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
+import Image from "next/image";
 import type { Metadata } from "next";
 
 export async function generateMetadata(
@@ -50,8 +51,14 @@ export default async function Home() {
           <div className="flex flex-wrap items-center justify-center gap-4 pt-4">
             <div className="flex -space-x-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-10 w-10 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-[10px] font-bold overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?u=${i}`} alt="" />
+                <div key={i} className="h-10 w-10 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-[10px] font-bold overflow-hidden relative">
+                  <Image 
+                    src={`https://i.pravatar.cc/100?u=${i}`} 
+                    alt={`User ${i}`}
+                    fill
+                    className="object-cover"
+                    unoptimized
+                  />
                 </div>
               ))}
               <div className="h-10 w-10 rounded-full border-2 border-background bg-secondary flex items-center justify-center text-[10px] font-bold">

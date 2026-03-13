@@ -30,6 +30,7 @@ export async function addLink(url: string, category: string = "general") {
   }
 
   const session = await checkRateLimit();
+  const userId = session.user!.id!;
 
   const metadata = await getMetadata(url);
 
@@ -54,7 +55,7 @@ export async function addLink(url: string, category: string = "general") {
       description: metadata.description,
       image: metadata.image,
       category: validatedFields.data.category,
-      userId: session.user.id!,
+      userId,
     },
   });
 
@@ -65,11 +66,12 @@ export async function addLink(url: string, category: string = "general") {
 
 export async function deleteLink(id: string) {
   const session = await checkRateLimit();
+  const userId = session.user!.id!;
 
   await prisma.link.delete({
     where: {
       id,
-      userId: session.user.id!,
+      userId,
     },
   });
 
@@ -86,8 +88,16 @@ export async function updateLink(id: string, data: UpdateLinkInput) {
   }
 
   const session = await checkRateLimit();
+  const userId = session.user!.id!;
 
-  const updateData: any = { ...validatedFields.data };
+  const updateData = { ...validatedFields.data } as {
+    title?: string;
+    description?: string | null;
+    category?: string | null;
+    url?: string;
+    image?: string | null;
+    slug?: string;
+  };
   
   if (updateData.title) {
     updateData.slug = slugify(updateData.title);
@@ -96,7 +106,7 @@ export async function updateLink(id: string, data: UpdateLinkInput) {
   const link = await prisma.link.update({
     where: {
       id,
-      userId: session.user.id!,
+      userId,
     },
     data: updateData,
   });

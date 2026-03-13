@@ -6,6 +6,16 @@ import { LinkList } from "@/components/admin/link-list";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 
+type AdminLink = {
+  id: string;
+  url: string;
+  title: string;
+  description: string | null;
+  image: string | null;
+  category: string | null;
+  createdAt: Date;
+};
+
 export default async function AdminPage() {
   const session = await auth();
 
@@ -35,7 +45,7 @@ export default async function AdminPage() {
           </section>
 
           <section className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-            <LinkList links={links as any} />
+            <LinkList links={links as unknown as AdminLink[]} />
           </section>
         </div>
       </main>

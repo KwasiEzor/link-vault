@@ -68,7 +68,7 @@ export function AddLinkForm() {
         } else {
           setMetadata(null);
         }
-      } catch (error) {
+      } catch {
         setMetadata(null);
       } finally {
         setFetchingMetadata(false);
