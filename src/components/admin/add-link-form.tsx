@@ -62,7 +62,7 @@ export function AddLinkForm() {
       setFetchingMetadata(true);
       try {
         const res = await fetch(`/api/metadata?url=${encodeURIComponent(urlValue)}`);
-        let data: { title?: string; image?: string | null; description?: string | null; error?: string } | null = null;
+        let data: { title?: string; image?: string | null; description?: string | null; error?: string; code?: string } | null = null;
         try {
           data = (await res.json()) as typeof data;
         } catch {
@@ -77,10 +77,16 @@ export function AddLinkForm() {
             description: data?.description ?? null,
           });
         } else {
+          const codeSuffix = data?.code ? `, ${data.code}` : "";
+          const baseError = data?.error || "We couldn't reach this URL.";
+          const friendly =
+            res.status >= 500
+              ? "Metadata service error. Check Vercel logs for `/api/metadata`."
+              : baseError;
           setMetadata({ 
             title: "Metadata extraction failed", 
             image: null, 
-            description: `${data?.error || "We couldn't reach this URL."} (HTTP ${res.status})`,
+            description: `${friendly} (HTTP ${res.status}${codeSuffix})`,
             error: "true"
           });
         }
