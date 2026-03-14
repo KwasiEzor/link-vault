@@ -468,31 +468,34 @@ export function LinkDetailClient({
             <Tabs defaultValue="details" className="w-full" onValueChange={setActiveTab}>
               <TabsList
                 variant="line"
-                className="w-full justify-start gap-1 px-1 py-1 bg-transparent overflow-x-auto no-scrollbar"
+                className={cn(
+                  "w-full justify-start gap-1 p-1 rounded-2xl border border-white/10 bg-white/5",
+                  "flex flex-wrap"
+                )}
               >
-                <TabsTrigger value="details" className="text-xs">
-                  Details
+                <TabsTrigger value="details" className="flex-none h-10 text-[11px] rounded-xl px-3">
+                  <span className="font-black uppercase tracking-widest">Details</span>
                 </TabsTrigger>
                 {isOwner && (
                   <>
-                    <TabsTrigger value="notes" className="text-xs">
+                    <TabsTrigger value="notes" className="flex-none h-10 text-[11px] rounded-xl px-3">
                       <StickyNote className="h-4 w-4" />
-                      Notes
+                      <span className="hidden sm:inline font-black uppercase tracking-widest">Notes</span>
                     </TabsTrigger>
-                    <TabsTrigger value="highlights" className="text-xs">
+                    <TabsTrigger value="highlights" className="flex-none h-10 text-[11px] rounded-xl px-3">
                       <Highlighter className="h-4 w-4" />
-                      Highlights
+                      <span className="hidden sm:inline font-black uppercase tracking-widest">Highlights</span>
                     </TabsTrigger>
-                    <TabsTrigger value="history" className="text-xs">
+                    <TabsTrigger value="history" className="flex-none h-10 text-[11px] rounded-xl px-3">
                       <History className="h-4 w-4" />
-                      History
+                      <span className="hidden sm:inline font-black uppercase tracking-widest">History</span>
                     </TabsTrigger>
-                    <TabsTrigger value="insights" className="text-xs">
+                    <TabsTrigger value="insights" className="flex-none h-10 text-[11px] rounded-xl px-3">
                       <Sparkles className="h-4 w-4" />
-                      Insights
+                      <span className="hidden sm:inline font-black uppercase tracking-widest">Insights</span>
                     </TabsTrigger>
-                    <TabsTrigger value="related" className="text-xs">
-                      Related
+                    <TabsTrigger value="related" className="flex-none h-10 text-[11px] rounded-xl px-3">
+                      <span className="font-black uppercase tracking-widest">Related</span>
                     </TabsTrigger>
                   </>
                 )}
@@ -674,7 +677,7 @@ function DetailsPanel({
             </div>
 
             <form
-              className="mt-3 flex items-center gap-2"
+              className="mt-3 flex items-stretch gap-2"
               onSubmit={(e) => {
                 e.preventDefault();
                 onAddTag(tagDraft);
@@ -685,14 +688,14 @@ function DetailsPanel({
                 value={tagDraft}
                 onChange={(e) => setTagDraft(e.target.value)}
                 placeholder="Add tag (enter)"
-                className="h-10 w-full rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                className="h-11 w-full rounded-2xl bg-black/20 border border-white/10 px-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 disabled={detailsLoading || tagsSaving}
               />
               <button
                 type="submit"
                 className={cn(
-                  buttonVariants({ variant: "outline" }),
-                  "h-10 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold shrink-0"
+                  buttonVariants({ size: "lg" }),
+                  "h-11 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20 shrink-0"
                 )}
                 disabled={detailsLoading || tagsSaving}
               >
