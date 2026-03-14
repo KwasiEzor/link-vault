@@ -37,12 +37,12 @@ export async function addLink(url: string, category: string = "general") {
   let hostname = url;
   try {
     hostname = new URL(url).hostname;
-  } catch (e) {
+  } catch {
     // Fallback if URL is weird
   }
 
   const title = hostname;
-  let slug = `${slugify(title)}-${Math.random().toString(36).substring(2, 7)}`;
+  const slug = `${slugify(title)}-${Math.random().toString(36).substring(2, 7)}`;
 
   const link = await prisma.link.create({
     data: {

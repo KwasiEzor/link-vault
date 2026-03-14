@@ -49,7 +49,7 @@ export default async function CurationPage() {
         <div className="max-w-6xl mx-auto space-y-12">
           <section className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-8 border-b border-white/5">
             <div className="space-y-1">
-              <h1 className="text-4xl font-black tracking-tight text-white italic">Curator's Lab</h1>
+              <h1 className="text-4xl font-black tracking-tight text-white italic">Curator&apos;s Lab</h1>
               <p className="text-muted-foreground font-medium">Review AI-powered refinements and approve intelligence.</p>
             </div>
           </section>

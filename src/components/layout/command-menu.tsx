@@ -168,7 +168,7 @@ export function CommandMenu() {
             className="py-3 px-4 rounded-2xl cursor-pointer hover:bg-white/5"
           >
             <Sparkles className="mr-4 h-5 w-5 text-violet-400" />
-            <span className="font-bold">Curator's Lab (AI)</span>
+            <span className="font-bold">Curator&apos;s Lab (AI)</span>
             <CommandShortcut>G L</CommandShortcut>
           </CommandItem>
           <CommandItem

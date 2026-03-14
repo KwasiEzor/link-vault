@@ -48,6 +48,7 @@ function FormattedDate({ date }: { date: Date | string }) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setMounted(true);
   }, []);
 
@@ -276,7 +277,7 @@ export function LinkList({ userId, initialLinks, initialNextCursor, categories }
                         <ExternalLink className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                       </a>
                       <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
+                        <DropdownMenuTrigger>
                           <Button variant="ghost" size="icon" className="h-9 w-9 text-muted-foreground hover:bg-white/5">
                             <MoreVertical className="h-4 w-4" />
                           </Button>

@@ -32,7 +32,7 @@ type Link = {
   enrichmentStatus: string | null;
 };
 
-export function CurationLab({ initialLinks }: { initialLinks: any[] }) {
+export function CurationLab({ initialLinks }: { initialLinks: Link[] }) {
   const [links, setLinks] = useState<Link[]>(initialLinks);
 
   const handleApprove = async (id: string) => {
@@ -40,7 +40,7 @@ export function CurationLab({ initialLinks }: { initialLinks: any[] }) {
       await approveEnrichment(id);
       setLinks(prev => prev.filter(l => l.id !== id));
       toast.success("Intelligence approved and synced!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to approve enrichment.");
     }
   };
@@ -60,7 +60,7 @@ export function CurationLab({ initialLinks }: { initialLinks: any[] }) {
         </div>
         <h2 className="text-2xl font-bold text-white mb-2">Lab is Quiet</h2>
         <p className="text-muted-foreground font-medium max-w-md mx-auto">
-          No pending AI enrichments found. Add new links or trigger a "Re-Enrich" from the dashboard to see them here.
+          No pending AI enrichments found. Add new links or trigger a &quot;Re-Enrich&quot; from the dashboard to see them here.
         </p>
       </div>
     );

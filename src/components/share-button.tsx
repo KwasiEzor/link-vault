@@ -76,7 +76,7 @@ export function ShareButton({
   if (variant === "icon") {
     return (
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger>
           <button 
             className={cn(
               "text-slate-400 hover:text-white transition-colors p-1 rounded-md hover:bg-white/5",

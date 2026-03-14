@@ -48,7 +48,7 @@ export function SearchAndFilter({
       </div>
 
       <DropdownMenu>
-        <DropdownMenuTrigger asChild>
+        <DropdownMenuTrigger>
           <Button variant="outline" className="h-11 rounded-xl border-white/5 bg-white/5 hover:bg-white/10 font-bold group">
             <Filter className="mr-2 h-4 w-4 group-hover:text-primary transition-colors" />
             {category === "all" ? "All Categories" : category}

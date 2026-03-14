@@ -136,7 +136,7 @@ export async function getBreakdownData(userId: string) {
 
   return {
     devices: Object.entries(devices)
-      .filter(([_, count]) => count > 0)
+      .filter(([, count]) => count > 0)
       .map(([name, value]) => ({ name, value })),
     referrers: Object.entries(referrers)
       .sort((a, b) => b[1] - a[1])

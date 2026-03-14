@@ -4,11 +4,20 @@ import { prisma } from "@/lib/prisma";
 import { getMetadata } from "@/lib/metadata";
 import { revalidatePath } from "next/cache";
 import { enrichMetadata } from "@/lib/ai";
+import { getSetting } from "@/lib/settings";
 
 const scrapeMetadata = inngest.createFunction(
   { id: "scrape-metadata", name: "Scrape Link Metadata" },
   { event: "link.created" },
   async ({ event, step }) => {
+    const isEnabled = await step.run("check-settings", async () => {
+      return await getSetting("METADATA_SCRAPING_ENABLED", true);
+    });
+
+    if (!isEnabled) {
+      return { skipped: true, reason: "Metadata scraping is disabled in settings." };
+    }
+
     const { linkId, url } = event.data;
 
     // Step 1: Scrape basic metadata
@@ -45,6 +54,7 @@ const scrapeMetadata = inngest.createFunction(
     // Purge cache
     revalidatePath("/admin");
     revalidatePath("/admin/curation");
+    revalidatePath("/admin/settings");
     revalidatePath("/");
 
     // Fan-out: trigger health check
@@ -65,6 +75,14 @@ const checkLinkHealth = inngest.createFunction(
   { id: "check-link-health", name: "Check Link Health" },
   { event: "link.health_check" },
   async ({ event, step }) => {
+    const isEnabled = await step.run("check-settings", async () => {
+      return await getSetting("HEALTH_CHECK_ENABLED", true);
+    });
+
+    if (!isEnabled) {
+      return { skipped: true, reason: "Health checks are disabled in settings." };
+    }
+
     const { linkId, url } = event.data;
 
     const isAlive = await step.run("ping-url", async () => {

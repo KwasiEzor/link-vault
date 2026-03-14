@@ -18,6 +18,7 @@ type LinkListItem = {
   description: string | null;
   image: string | null;
   category: string | null;
+  status: string | null;
   createdAt: Date;
   clicks: number;
 };

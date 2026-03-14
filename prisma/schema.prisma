@@ -90,3 +90,10 @@ model Click {
   @@index([linkId])
   @@index([createdAt])
 }
+
+model SystemSetting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  updatedAt DateTime @updatedAt
+}

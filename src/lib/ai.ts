@@ -1,19 +1,27 @@
 import OpenAI from "openai";
+import { getSetting } from "@/lib/settings";
 
 let openaiInstance: OpenAI | null = null;
+let lastUsedApiKey: string | null = null;
+let lastUsedBaseUrl: string | null = null;
 
-function getOpenAI() {
-  if (openaiInstance) return openaiInstance;
-  
-  const apiKey = process.env.AI_API_KEY;
-  const baseURL = process.env.AI_BASE_URL || "https://api.openai.com/v1";
+async function getOpenAI() {
+  const apiKey = await getSetting("AI_API_KEY");
+  const baseURL = await getSetting("AI_BASE_URL", "https://api.openai.com/v1");
 
   if (!apiKey) return null;
 
+  if (openaiInstance && lastUsedApiKey === apiKey && lastUsedBaseUrl === baseURL) {
+    return openaiInstance;
+  }
+  
   openaiInstance = new OpenAI({
     apiKey,
     baseURL,
   });
+  
+  lastUsedApiKey = apiKey;
+  lastUsedBaseUrl = baseURL;
   
   return openaiInstance;
 }
@@ -24,11 +32,19 @@ export type AIEnrichmentResult = {
 };
 
 export async function enrichMetadata(title: string, description: string | null, url: string): Promise<AIEnrichmentResult | null> {
-  const openai = getOpenAI();
+  const aiEnabled = await getSetting("AI_ENABLED", true);
+  if (!aiEnabled) {
+    console.log("AI Enrichment is disabled in settings.");
+    return null;
+  }
+
+  const openai = await getOpenAI();
   if (!openai) {
     console.warn("AI_API_KEY is not set. Skipping AI enrichment.");
     return null;
   }
+
+  const model = await getSetting("AI_MODEL", "gpt-3.5-turbo");
 
   const prompt = `
     You are an expert digital librarian and content curator for "LinkVault", a premium visual bookmarking platform.
@@ -52,7 +68,7 @@ export async function enrichMetadata(title: string, description: string | null, 
   try {
     const response = await openai.chat.completions.create({
       messages: [{ role: "system", content: "You are a professional content curator." }, { role: "user", content: prompt }],
-      model: process.env.AI_MODEL || "gpt-3.5-turbo", // or "llama3-70b-8192" for Groq
+      model: model,
       response_format: { type: "json_object" },
     });
 
