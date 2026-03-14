@@ -118,7 +118,7 @@ export function ShareButton({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+      <DropdownMenuTrigger>
         <Button 
           variant="outline" 
           className={cn(
