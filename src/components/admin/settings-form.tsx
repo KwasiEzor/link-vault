@@ -10,8 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
-import { Sparkles, Activity, Save, Loader2, Key, Globe, Cpu, Lock, ShieldCheck } from "lucide-react";
-import { updateSettings } from "@/app/actions/settings";
+import { cn } from "@/lib/utils";
+import { Sparkles, Activity, Save, Loader2, Key, Globe, Cpu, Lock, ShieldCheck, CheckCircle2, AlertCircle, Zap } from "lucide-react";
+import { updateSettings, testOpenAIConnection, testInngestConnection } from "@/app/actions/settings";
 import { motion, AnimatePresence } from "framer-motion";
 
 const PRESET_MODELS = [
@@ -43,6 +44,10 @@ interface SettingsFormProps {
 
 export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [isSaving, setIsSaving] = useState(false);
+  const [isTestingAI, setIsTestingAI] = useState(false);
+  const [isTestingInngest, setIsTestingInngest] = useState(false);
+  const [aiStatus, setAiStatus] = useState<null | { success: boolean; message: string }>(null);
+  const [inngestStatus, setInngestStatus] = useState<null | { success: boolean; message: string }>(null);
   
   const initialModel = (initialSettings.AI_MODEL as string) || "gpt-3.5-turbo";
   const isPreset = PRESET_MODELS.some(m => m.value === initialModel);
@@ -87,6 +92,58 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     }
   };
 
+  const onTestAI = async () => {
+    const apiKey = form.getValues("AI_API_KEY");
+    const baseURL = form.getValues("AI_BASE_URL");
+    
+    if (!apiKey) {
+      toast.error("Please enter an API key first");
+      return;
+    }
+
+    setIsTestingAI(true);
+    setAiStatus(null);
+    try {
+      const result = await testOpenAIConnection(apiKey, baseURL || "");
+      setAiStatus(result);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("An unexpected error occurred during testing");
+    } finally {
+      setIsTestingAI(false);
+    }
+  };
+
+  const onTestInngest = async () => {
+    const eventKey = form.getValues("INNGEST_EVENT_KEY");
+    const signingKey = form.getValues("INNGEST_SIGNING_KEY");
+    
+    if (!eventKey) {
+      toast.error("Please enter an Event key first");
+      return;
+    }
+
+    setIsTestingInngest(true);
+    setInngestStatus(null);
+    try {
+      const result = await testInngestConnection(eventKey, signingKey || "");
+      setInngestStatus(result);
+      if (result.success) {
+        toast.success(result.message);
+      } else {
+        toast.error(result.message);
+      }
+    } catch {
+      toast.error("An unexpected error occurred during testing");
+    } finally {
+      setIsTestingInngest(false);
+    }
+  };
+
   return (
     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8 pb-20">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -125,15 +182,51 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
 
                     <div className="space-y-4">
                         <div className="space-y-2">
-                            <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                                <Key className="h-3 w-3" /> API Key
-                            </Label>
-                            <Input 
-                                type="password" 
-                                placeholder="sk-..." 
-                                className="glass-input h-12 rounded-xl"
-                                {...form.register("AI_API_KEY")}
-                            />
+                            <div className="flex items-center justify-between">
+                                <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                                    <Key className="h-3 w-3" /> API Key
+                                </Label>
+                                {aiStatus && (
+                                    <span className={`text-[10px] font-bold flex items-center gap-1 ${aiStatus.success ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                        {aiStatus.success ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                                        {aiStatus.success ? 'Connected' : 'Failed'}
+                                    </span>
+                                )}
+                            </div>
+                            <div className="relative group">
+                                <Input 
+                                    type="password" 
+                                    placeholder="sk-..." 
+                                    className="glass-input h-12 rounded-xl pr-24"
+                                    {...form.register("AI_API_KEY")}
+                                />
+                                <div className="absolute right-2 top-1.5">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={onTestAI}
+                                        disabled={isTestingAI}
+                                        className={cn(
+                                            "h-9 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all duration-300",
+                                            !aiStatus && "hover:bg-white/10",
+                                            aiStatus?.success && "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/20",
+                                            aiStatus && !aiStatus.success && "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/20"
+                                        )}
+                                    >
+                                        {isTestingAI ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : aiStatus?.success ? (
+                                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                                        ) : aiStatus && !aiStatus.success ? (
+                                            <AlertCircle className="h-3 w-3 mr-1" />
+                                        ) : (
+                                            <Zap className="h-3 w-3 mr-1" />
+                                        )}
+                                        {aiStatus?.success ? 'Connected' : aiStatus && !aiStatus.success ? 'Failed' : 'Test'}
+                                    </Button>
+                                </div>
+                            </div>
                         </div>
 
                         <div className="space-y-2">
@@ -237,21 +330,57 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                     </div>
 
                     <div className="space-y-4 pt-4 border-t border-white/5">
-                        <h4 className="text-xs font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
-                            <ShieldCheck className="h-3 w-3" /> Inngest Security
-                        </h4>
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-xs font-black uppercase tracking-widest text-indigo-400 flex items-center gap-2">
+                                <ShieldCheck className="h-3 w-3" /> Inngest Security
+                            </h4>
+                            {inngestStatus && (
+                                <span className={`text-[10px] font-bold flex items-center gap-1 ${inngestStatus.success ? 'text-emerald-400' : 'text-rose-400'}`}>
+                                    {inngestStatus.success ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
+                                    {inngestStatus.success ? 'Connected' : 'Failed'}
+                                </span>
+                            )}
+                        </div>
                         
                         <div className="space-y-4">
                             <div className="space-y-2">
                                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <Key className="h-3 w-3" /> Event Key
                                 </Label>
-                                <Input 
-                                    type="password"
-                                    placeholder="inngest_event_..." 
-                                    className="glass-input h-12 rounded-xl"
-                                    {...form.register("INNGEST_EVENT_KEY")}
-                                />
+                                <div className="relative group">
+                                    <Input 
+                                        type="password"
+                                        placeholder="inngest_event_..." 
+                                        className="glass-input h-12 rounded-xl pr-24"
+                                        {...form.register("INNGEST_EVENT_KEY")}
+                                    />
+                                    <div className="absolute right-2 top-1.5">
+                                    <Button
+                                        type="button"
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={onTestInngest}
+                                        disabled={isTestingInngest}
+                                        className={cn(
+                                            "h-9 rounded-lg text-[10px] font-black uppercase tracking-tighter transition-all duration-300",
+                                            !inngestStatus && "hover:bg-white/10",
+                                            inngestStatus?.success && "bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30 border border-emerald-500/20",
+                                            inngestStatus && !inngestStatus.success && "bg-rose-500/20 text-rose-400 hover:bg-rose-500/30 border border-rose-500/20"
+                                        )}
+                                    >
+                                        {isTestingInngest ? (
+                                            <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : inngestStatus?.success ? (
+                                            <CheckCircle2 className="h-3 w-3 mr-1" />
+                                        ) : inngestStatus && !inngestStatus.success ? (
+                                            <AlertCircle className="h-3 w-3 mr-1" />
+                                        ) : (
+                                            <Zap className="h-3 w-3 mr-1" />
+                                        )}
+                                        {inngestStatus?.success ? 'Connected' : inngestStatus && !inngestStatus.success ? 'Failed' : 'Test'}
+                                    </Button>
+                                </div>
+                                </div>
                             </div>
 
                             <div className="space-y-2">

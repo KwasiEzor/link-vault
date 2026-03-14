@@ -69,8 +69,13 @@ describe("addLink Action", () => {
       data: expect.objectContaining({
         userId: "user-1",
         category: "tech",
-        slug: "test-title"
+        enrichmentStatus: "pending",
+        url: "https://example.com"
       })
     }));
+    
+    // Check if slug starts with expected prefix (slugify('example.com'))
+    const lastCall = vi.mocked(prisma.link.create).mock.calls[0][0];
+    expect(lastCall.data.slug).toMatch(/^examplecom-/);
   });
 });

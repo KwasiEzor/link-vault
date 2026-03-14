@@ -110,4 +110,5 @@ const checkLinkHealth = inngest.createFunction(
 export const { GET, POST, PUT } = serve({
   client: inngest,
   functions: [scrapeMetadata, checkLinkHealth],
+  signingKey: process.env.INNGEST_SIGNING_KEY,
 });
