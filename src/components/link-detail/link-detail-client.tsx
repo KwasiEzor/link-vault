@@ -517,28 +517,32 @@ export function LinkDetailClient({
               <TabsList
                 variant="line"
                 className={cn(
-                  "w-full justify-start gap-1 p-1 rounded-[24px] border-none bg-transparent",
-                  "flex flex-wrap"
+                  "w-full justify-start gap-1 p-1 rounded-[24px] border border-white/10 bg-white/5",
+                  "flex flex-nowrap overflow-x-auto no-scrollbar"
                 )}
               >
-                <TabsTrigger value="details" className="flex-1 h-11 text-[10px] rounded-xl px-4 transition-all data-[state=active]:bg-white/10 data-[state=active]:shadow-lg">
+                <TabsTrigger value="details" className="shrink-0 h-11 text-[10px] rounded-xl px-4 transition-all data-active:bg-white/10 data-active:shadow-lg">
                   <span className="font-black uppercase tracking-widest">Details</span>
                 </TabsTrigger>
                 {isOwner && (
                   <>
-                    <TabsTrigger value="notes" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
+                    <TabsTrigger value="notes" className="shrink-0 h-11 text-[10px] rounded-xl px-3 transition-all data-active:bg-white/10">
                       <StickyNote className="h-3.5 w-3.5 mr-1.5" />
                       <span className="hidden sm:inline font-black uppercase tracking-widest">Notes</span>
                     </TabsTrigger>
-                    <TabsTrigger value="highlights" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
+                    <TabsTrigger value="highlights" className="shrink-0 h-11 text-[10px] rounded-xl px-3 transition-all data-active:bg-white/10">
                       <Highlighter className="h-3.5 w-3.5 mr-1.5" />
                       <span className="hidden sm:inline font-black uppercase tracking-widest">HLs</span>
                     </TabsTrigger>
-                    <TabsTrigger value="insights" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
+                    <TabsTrigger value="history" className="shrink-0 h-11 text-[10px] rounded-xl px-3 transition-all data-active:bg-white/10">
+                      <History className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="hidden sm:inline font-black uppercase tracking-widest">History</span>
+                    </TabsTrigger>
+                    <TabsTrigger value="insights" className="shrink-0 h-11 text-[10px] rounded-xl px-3 transition-all data-active:bg-white/10">
                       <Sparkles className="h-3.5 w-3.5 mr-1.5" />
                       <span className="hidden sm:inline font-black uppercase tracking-widest">AI</span>
                     </TabsTrigger>
-                    <TabsTrigger value="related" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
+                    <TabsTrigger value="related" className="shrink-0 h-11 text-[10px] rounded-xl px-3 transition-all data-active:bg-white/10">
                       <span className="font-black uppercase tracking-widest">Related</span>
                     </TabsTrigger>
                   </>
