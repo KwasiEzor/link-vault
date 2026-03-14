@@ -46,6 +46,7 @@ Vercel will run `vercel-build` (if present) which we use to keep the DB schema i
 This ensures the Prisma client is correctly typed for your Postgres schema at runtime.
 
 **Important:** `prisma db push` requires a non-pooled/direct connection. Make sure `DIRECT_URL` is set in Vercel.
+If you don't set `DIRECT_URL`, the `vercel-build` script will fall back to `DATABASE_URL` (works only if `DATABASE_URL` is a direct connection string).
 
 ---
 **Note:** If this is your first time deploying, ensure you run `npx prisma migrate deploy` locally (pointing to your production DB) or add it to your CI/CD to initialize the schema.
