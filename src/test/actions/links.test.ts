@@ -7,6 +7,10 @@ vi.mock("@/auth", () => ({
   auth: vi.fn(),
 }));
 
+vi.mock("@/lib/url-safety", () => ({
+  assertSafeUrl: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock("@/lib/prisma", () => ({
   prisma: {
     link: {

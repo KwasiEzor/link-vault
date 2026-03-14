@@ -5,6 +5,9 @@ import { getMetadata } from "@/lib/metadata";
 import { revalidatePath } from "next/cache";
 import { enrichMetadata } from "@/lib/ai";
 import { getSetting } from "@/lib/settings";
+import { assertSafeUrl, safeUrlOrNull } from "@/lib/url-safety";
+
+export const runtime = "nodejs";
 
 const scrapeMetadata = inngest.createFunction(
   { id: "scrape-metadata", name: "Scrape Link Metadata" },
@@ -34,19 +37,21 @@ const scrapeMetadata = inngest.createFunction(
 
     // Step 3: Update database with both metadata and AI results (Suggestions)
     await step.run("update-link", async () => {
+      const safeImage = await safeUrlOrNull(metadata.image);
+      const safeCanonicalUrl = (await safeUrlOrNull(metadata.url)) || url;
       await prisma.link.update({
         where: { id: linkId },
         data: {
           title: metadata.title,
           // Save original metadata
           description: metadata.description,
-          image: metadata.image,
+          image: safeImage,
           // Save AI suggestions separately
           aiSummary: aiResult?.summary,
           aiCategory: aiResult?.category,
           enrichmentStatus: aiResult ? "completed" : "failed",
           // Only update URL if we got a canonical one
-          url: metadata.url || url,
+          url: safeCanonicalUrl,
         },
       });
     });
@@ -84,6 +89,20 @@ const checkLinkHealth = inngest.createFunction(
     }
 
     const { linkId, url } = event.data;
+
+    // Extra guard: never fetch local/private resources.
+    try {
+      await assertSafeUrl(url);
+    } catch (error) {
+      console.warn("Health check blocked unsafe URL:", error);
+      await step.run("update-status", async () => {
+        await prisma.link.update({
+          where: { id: linkId },
+          data: { status: "broken" },
+        });
+      });
+      return { skipped: true, reason: "URL blocked by safety checks", linkId, url };
+    }
 
     const isAlive = await step.run("ping-url", async () => {
       try {

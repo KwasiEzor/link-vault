@@ -1,9 +1,7 @@
 import { getLinkBySlug } from "@/app/actions/links";
-import { recordVisit } from "@/app/actions/analytics";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { headers } from "next/headers";
 import { 
   ExternalLink, 
   Calendar, 
@@ -16,6 +14,7 @@ import { Metadata } from "next";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 import { ShareButton } from "@/components/share-button";
+import { RecordVisit } from "@/components/record-visit";
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
@@ -42,18 +41,16 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
     notFound();
   }
 
-  // Record analytics visit
-  const headerList = await headers();
-  const userAgent = headerList.get("user-agent") || undefined;
-  const referrer = headerList.get("referer") || undefined;
-  const country = headerList.get("x-vercel-ip-country") || undefined;
-  
-  await recordVisit(link.id, { userAgent, referrer, country });
-
-  const hostname = new URL(link.url).hostname.replace("www.", "");
+  let hostname = "unknown";
+  try {
+    hostname = new URL(link.url).hostname.replace("www.", "");
+  } catch {
+    // If a bad URL makes it into the DB, don't crash the page render.
+  }
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <RecordVisit linkId={link.id} />
       {/* Background Ambience */}
       <div className="fixed inset-0 -z-10 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background opacity-50" />
 
@@ -120,6 +117,7 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
                       width={24}
                       height={24}
                       alt=""
+                      unoptimized
                     />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -172,7 +170,7 @@ export default async function LinkPage({ params }: { params: Promise<{ slug: str
                   <div className="flex items-center gap-3">
                     <div className="h-8 w-8 rounded-full bg-slate-800 overflow-hidden relative">
                       {link.user.image ? (
-                        <Image src={link.user.image} alt={link.user.name || "Curator"} fill />
+                        <Image src={link.user.image} alt={link.user.name || "Curator"} fill unoptimized />
                       ) : (
                         <div className="h-full w-full flex items-center justify-center text-[10px] font-bold">LV</div>
                       )}

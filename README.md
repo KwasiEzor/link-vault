@@ -28,7 +28,7 @@ LinkVault is a premium, high-performance visual web bookmarking and curation pla
 
 *   **Framework**: Next.js 15 (App Router)
 *   **Language**: TypeScript (100% Coverage)
-*   **Database**: Prisma ORM (SQLite/PostgreSQL)
+*   **Database**: Prisma ORM (PostgreSQL)
 *   **Styling**: Tailwind CSS 4 + Framer Motion
 *   **Automation**: Inngest (Background Jobs)
 *   **AI**: OpenAI SDK (Compatible with Groq/Mistral)
@@ -45,14 +45,22 @@ LinkVault is a premium, high-performance visual web bookmarking and curation pla
 2.  **Environment Setup**:
     Create a `.env` file with:
     ```env
-    DATABASE_URL="file:./dev.db"
-    NEXTAUTH_SECRET="your-secret"
+    # PostgreSQL connection (pooled / normal)
+    DATABASE_URL="postgresql://USER:PASSWORD@HOST:5432/DB?schema=public"
+
+    # Direct (non-pooled) connection used by migrations
+    DIRECT_URL="postgresql://USER:PASSWORD@HOST:5432/DB?schema=public"
+
+    # Auth.js / NextAuth v5
+    AUTH_SECRET="your-secret"
+
+    # Optional (can also be set in Admin UI)
     AI_API_KEY="your-api-key"
     ```
 
 3.  **Database Sync**:
     ```bash
-    npx prisma db push
+    npx prisma migrate dev
     ```
 
 4.  **Run Development**:

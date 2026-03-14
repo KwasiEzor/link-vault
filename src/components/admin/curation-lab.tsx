@@ -89,13 +89,20 @@ export function CurationLab({ initialLinks }: { initialLinks: Link[] }) {
                             alt={link.title} 
                             fill 
                             className="object-cover opacity-60 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700" 
+                            unoptimized
                         />
                     ) : (
                         <div className="h-full w-full bg-slate-900 flex items-center justify-center text-muted-foreground italic text-xs uppercase tracking-tighter">No Preview</div>
                     )}
                     <div className="absolute inset-0 bg-linear-to-t from-black via-transparent to-transparent" />
                     <div className="absolute bottom-4 left-4 right-4 truncate font-bold text-xs text-white/80">
-                        {new URL(link.url).hostname}
+                        {(() => {
+                          try {
+                            return new URL(link.url).hostname;
+                          } catch {
+                            return "unknown";
+                          }
+                        })()}
                     </div>
                   </div>
 

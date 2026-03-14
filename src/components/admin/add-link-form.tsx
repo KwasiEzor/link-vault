@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus, Loader2, Link2, Sparkles, AlertCircle } from "lucide-react";
-import { addLink, getCategories } from "@/app/actions/links";
+import { addLink, getMyCategories } from "@/app/actions/links";
 import { toast } from "sonner";
 import { linkSchema, type LinkInput } from "@/lib/schemas";
 import Image from "next/image";
@@ -45,7 +45,7 @@ export function AddLinkForm() {
   // Fetch existing categories when dialog opens
   useEffect(() => {
     if (open) {
-      getCategories().then(setExistingCategories);
+      getMyCategories().then(setExistingCategories).catch(() => setExistingCategories([]));
     }
   }, [open]);
 

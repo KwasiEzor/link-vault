@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { getMetadata } from "@/lib/metadata";
 import { auth } from "@/auth";
 import { metadataRateLimiter } from "@/lib/rate-limit";
+import { assertSafeUrl } from "@/lib/url-safety";
+
+export const runtime = "nodejs";
 
 export async function GET(req: NextRequest) {
   const session = await auth();
@@ -28,6 +31,13 @@ export async function GET(req: NextRequest) {
 
   if (!url) {
     return NextResponse.json({ error: "URL is required" }, { status: 400 });
+  }
+
+  try {
+    await assertSafeUrl(url);
+  } catch (error) {
+    console.warn("Blocked unsafe URL:", error);
+    return NextResponse.json({ error: "URL is not allowed" }, { status: 400 });
   }
 
   try {

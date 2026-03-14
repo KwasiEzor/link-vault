@@ -10,7 +10,7 @@ export const updateLinkSchema = z.object({
   description: z.string().nullable().optional(),
   category: z.string().nullable().optional(),
   url: z.string().url("Invalid URL format").optional(),
-  image: z.string().nullable().optional(),
+  image: z.string().url("Invalid image URL format").nullable().optional(),
 });
 
 export type LinkInput = z.infer<typeof linkSchema>;

@@ -8,6 +8,7 @@ import { slugify } from "@/lib/utils";
 import { actionRateLimiter } from "@/lib/rate-limit";
 
 import { inngest } from "@/lib/inngest";
+import { assertSafeUrl } from "@/lib/url-safety";
 
 async function checkRateLimit() {
   const session = await auth();
@@ -32,6 +33,8 @@ export async function addLink(url: string, category: string = "general") {
 
   const session = await checkRateLimit();
   const userId = session.user!.id!;
+
+  await assertSafeUrl(url);
 
   // Initial placeholder title based on hostname
   let hostname = url;
@@ -193,11 +196,13 @@ export async function updateLink(id: string, data: UpdateLinkInput) {
     category?: string | null;
     url?: string;
     image?: string | null;
-    slug?: string;
   };
-  
-  if (updateData.title) {
-    updateData.slug = slugify(updateData.title);
+
+  if (updateData.url) {
+    await assertSafeUrl(updateData.url);
+  }
+  if (updateData.image) {
+    await assertSafeUrl(updateData.image);
   }
 
   const link = await prisma.link.update({
@@ -300,6 +305,14 @@ export async function getCategories(userId?: string) {
   return Array.from(new Set(categories
     .map((c) => c.category)
     .filter((c): c is string => !!c)));
+}
+
+export async function getMyCategories() {
+  const session = await auth();
+  if (!session?.user?.id) {
+    throw new Error("Unauthorized");
+  }
+  return getCategories(session.user.id);
 }
 
 export async function getLinkBySlug(slug: string) {

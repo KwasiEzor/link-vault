@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Sparkles, Activity, Save, Loader2, Key, Globe, Cpu, Lock, ShieldCheck, CheckCircle2, AlertCircle, Zap } from "lucide-react";
+import { Sparkles, Activity, Save, Loader2, Key, Globe, Cpu, Lock, ShieldCheck, CheckCircle2, AlertCircle, Zap, XCircle } from "lucide-react";
 import { updateSettings, testOpenAIConnection, testInngestConnection } from "@/app/actions/settings";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -46,8 +46,21 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isTestingAI, setIsTestingAI] = useState(false);
   const [isTestingInngest, setIsTestingInngest] = useState(false);
-  const [aiStatus, setAiStatus] = useState<null | { success: boolean; message: string }>(null);
-  const [inngestStatus, setInngestStatus] = useState<null | { success: boolean; message: string }>(null);
+  const [aiStatus, setAiStatus] = useState<null | { success: boolean; message: string; testedAt: number }>(null);
+  const [inngestStatus, setInngestStatus] = useState<null | { success: boolean; message: string; testedAt: number }>(null);
+
+  const [aiKeyMeta, setAiKeyMeta] = useState(() => ({
+    present: !!initialSettings.AI_API_KEY_PRESENT,
+    source: ((initialSettings.AI_API_KEY_SOURCE as string) || "none") as "db" | "env" | "none",
+  }));
+  const [inngestEventKeyMeta, setInngestEventKeyMeta] = useState(() => ({
+    present: !!initialSettings.INNGEST_EVENT_KEY_PRESENT,
+    source: ((initialSettings.INNGEST_EVENT_KEY_SOURCE as string) || "none") as "db" | "env" | "none",
+  }));
+  const [inngestSigningKeyMeta, setInngestSigningKeyMeta] = useState(() => ({
+    present: !!initialSettings.INNGEST_SIGNING_KEY_PRESENT,
+    source: ((initialSettings.INNGEST_SIGNING_KEY_SOURCE as string) || "none") as "db" | "env" | "none",
+  }));
   
   const initialModel = (initialSettings.AI_MODEL as string) || "gpt-3.5-turbo";
   const isPreset = PRESET_MODELS.some(m => m.value === initialModel);
@@ -55,35 +68,77 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   const form = useForm<SettingsValues>({
     resolver: zodResolver(settingsSchema),
     defaultValues: {
-      AI_API_KEY: (initialSettings.AI_API_KEY as string) || "",
+      // Never hydrate secrets into the client.
+      AI_API_KEY: "",
       AI_BASE_URL: (initialSettings.AI_BASE_URL as string) || "https://api.openai.com/v1",
       AI_MODEL: initialModel,
       AI_MODEL_SELECT: isPreset ? initialModel : "custom",
       AI_ENABLED: initialSettings.AI_ENABLED !== false,
       HEALTH_CHECK_ENABLED: initialSettings.HEALTH_CHECK_ENABLED !== false,
       METADATA_SCRAPING_ENABLED: initialSettings.METADATA_SCRAPING_ENABLED !== false,
-      INNGEST_EVENT_KEY: (initialSettings.INNGEST_EVENT_KEY as string) || "",
-      INNGEST_SIGNING_KEY: (initialSettings.INNGEST_SIGNING_KEY as string) || "",
+      INNGEST_EVENT_KEY: "",
+      INNGEST_SIGNING_KEY: "",
     },
   });
 
   const selectedModelType = form.watch("AI_MODEL_SELECT");
+  const aiApiKeyValue = form.watch("AI_API_KEY") || "";
+  const aiBaseUrlValue = form.watch("AI_BASE_URL") || "";
+  const aiModelSelectValue = form.watch("AI_MODEL_SELECT") || "";
+  const aiModelValue = form.watch("AI_MODEL") || "";
+  const inngestEventKeyValue = form.watch("INNGEST_EVENT_KEY") || "";
+  const inngestSigningKeyValue = form.watch("INNGEST_SIGNING_KEY") || "";
+
+  const lastAiFingerprintRef = useRef<string>("");
+  const lastInngestFingerprintRef = useRef<string>("");
+
+  useEffect(() => {
+    const fingerprint = [aiApiKeyValue, aiBaseUrlValue, aiModelSelectValue, aiModelValue].join("|");
+
+    if (lastAiFingerprintRef.current && lastAiFingerprintRef.current !== fingerprint) {
+      setAiStatus(null);
+    }
+    lastAiFingerprintRef.current = fingerprint;
+  }, [aiApiKeyValue, aiBaseUrlValue, aiModelSelectValue, aiModelValue]);
+
+  useEffect(() => {
+    const fingerprint = [inngestEventKeyValue, inngestSigningKeyValue].join("|");
+
+    if (lastInngestFingerprintRef.current && lastInngestFingerprintRef.current !== fingerprint) {
+      setInngestStatus(null);
+    }
+    lastInngestFingerprintRef.current = fingerprint;
+  }, [inngestEventKeyValue, inngestSigningKeyValue]);
 
   const onSubmit = async (values: SettingsValues) => {
     setIsSaving(true);
     try {
-      const dataToSave = { ...values };
+      const dataToSave: Record<string, string | boolean> = { ...values };
       // If a preset is selected, use it as the model
       if (values.AI_MODEL_SELECT !== "custom") {
         dataToSave.AI_MODEL = values.AI_MODEL_SELECT;
       }
       
+      // Avoid overwriting saved secrets with blanks. Save secrets only when explicitly provided.
+      if (!values.AI_API_KEY) delete dataToSave.AI_API_KEY;
+      if (!values.INNGEST_EVENT_KEY) delete dataToSave.INNGEST_EVENT_KEY;
+      if (!values.INNGEST_SIGNING_KEY) delete dataToSave.INNGEST_SIGNING_KEY;
+
       // Remove the UI-only field before saving
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { AI_MODEL_SELECT, ...finalData } = dataToSave;
       
       await updateSettings(finalData as Record<string, string | boolean>);
       toast.success("Settings updated successfully!");
+
+      if (values.AI_API_KEY === "__CLEAR__") setAiKeyMeta({ present: false, source: "none" });
+      else if (values.AI_API_KEY) setAiKeyMeta({ present: true, source: "db" });
+
+      if (values.INNGEST_EVENT_KEY === "__CLEAR__") setInngestEventKeyMeta({ present: false, source: "none" });
+      else if (values.INNGEST_EVENT_KEY) setInngestEventKeyMeta({ present: true, source: "db" });
+
+      if (values.INNGEST_SIGNING_KEY === "__CLEAR__") setInngestSigningKeyMeta({ present: false, source: "none" });
+      else if (values.INNGEST_SIGNING_KEY) setInngestSigningKeyMeta({ present: true, source: "db" });
     } catch (error) {
       toast.error("Failed to update settings.");
       console.error(error);
@@ -93,11 +148,12 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   };
 
   const onTestAI = async () => {
-    const apiKey = form.getValues("AI_API_KEY");
-    const baseURL = form.getValues("AI_BASE_URL");
+    const apiKeyRaw = form.getValues("AI_API_KEY") ?? "";
+    const apiKey = apiKeyRaw === "__CLEAR__" ? "" : apiKeyRaw;
+    const baseURL = form.getValues("AI_BASE_URL") ?? "";
     
-    if (!apiKey) {
-      toast.error("Please enter an API key first");
+    if (!apiKey && !aiKeyMeta.present) {
+      toast.error("No API key found. Add one in the field or via environment variables.");
       return;
     }
 
@@ -105,7 +161,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     setAiStatus(null);
     try {
       const result = await testOpenAIConnection(apiKey, baseURL || "");
-      setAiStatus(result);
+      setAiStatus({ ...result, testedAt: Date.now() });
       if (result.success) {
         toast.success(result.message);
       } else {
@@ -119,11 +175,13 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
   };
 
   const onTestInngest = async () => {
-    const eventKey = form.getValues("INNGEST_EVENT_KEY");
-    const signingKey = form.getValues("INNGEST_SIGNING_KEY");
+    const eventKeyRaw = form.getValues("INNGEST_EVENT_KEY") ?? "";
+    const signingKeyRaw = form.getValues("INNGEST_SIGNING_KEY") ?? "";
+    const eventKey = eventKeyRaw === "__CLEAR__" ? "" : eventKeyRaw;
+    const signingKey = signingKeyRaw === "__CLEAR__" ? "" : signingKeyRaw;
     
-    if (!eventKey) {
-      toast.error("Please enter an Event key first");
+    if (!eventKey && !inngestEventKeyMeta.present) {
+      toast.error("No Event key found. Add one in the field or via environment variables.");
       return;
     }
 
@@ -131,7 +189,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
     setInngestStatus(null);
     try {
       const result = await testInngestConnection(eventKey, signingKey || "");
-      setInngestStatus(result);
+      setInngestStatus({ ...result, testedAt: Date.now() });
       if (result.success) {
         toast.success(result.message);
       } else {
@@ -186,6 +244,11 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <Key className="h-3 w-3" /> API Key
                                 </Label>
+                                {aiKeyMeta.present && (
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                    Saved ({aiKeyMeta.source})
+                                  </span>
+                                )}
                                 {aiStatus && (
                                     <span className={`text-[10px] font-bold flex items-center gap-1 ${aiStatus.success ? 'text-emerald-400' : 'text-rose-400'}`}>
                                         {aiStatus.success ? <CheckCircle2 className="h-3 w-3" /> : <AlertCircle className="h-3 w-3" />}
@@ -193,14 +256,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                                     </span>
                                 )}
                             </div>
-                            <div className="relative group">
+                            <div className="relative">
                                 <Input 
                                     type="password" 
-                                    placeholder="sk-..." 
+                                    placeholder={aiKeyMeta.present ? "Saved (leave blank to keep)" : "sk-..."} 
                                     className="glass-input h-12 rounded-xl pr-24"
                                     {...form.register("AI_API_KEY")}
                                 />
-                                <div className="absolute right-2 top-1.5">
+                                <div className="absolute right-2 top-1.5 z-10">
                                     <Button
                                         type="button"
                                         size="sm"
@@ -227,6 +290,29 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                                     </Button>
                                 </div>
                             </div>
+                            {aiStatus && (
+                              <p className={cn(
+                                "text-[11px] font-medium",
+                                aiStatus.success ? "text-emerald-400/80" : "text-rose-400/80"
+                              )}>
+                                {aiStatus.message}
+                              </p>
+                            )}
+                            {aiKeyMeta.present && aiKeyMeta.source === "db" && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  form.setValue("AI_API_KEY", "__CLEAR__");
+                                  toast("API key will be cleared on save.");
+                                }}
+                                className="h-8 px-2 rounded-lg text-[10px] font-black uppercase tracking-tighter text-muted-foreground hover:bg-white/5 hover:text-white"
+                              >
+                                <XCircle className="h-3 w-3 mr-1" />
+                                Clear Saved Key
+                              </Button>
+                            )}
                         </div>
 
                         <div className="space-y-2">
@@ -347,14 +433,14 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                                     <Key className="h-3 w-3" /> Event Key
                                 </Label>
-                                <div className="relative group">
+                                <div className="relative">
                                     <Input 
                                         type="password"
-                                        placeholder="inngest_event_..." 
+                                        placeholder={inngestEventKeyMeta.present ? "Saved (leave blank to keep)" : "inngest_event_..."} 
                                         className="glass-input h-12 rounded-xl pr-24"
                                         {...form.register("INNGEST_EVENT_KEY")}
                                     />
-                                    <div className="absolute right-2 top-1.5">
+                                    <div className="absolute right-2 top-1.5 z-10">
                                     <Button
                                         type="button"
                                         size="sm"
@@ -382,6 +468,19 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 </div>
                                 </div>
                             </div>
+                            {inngestEventKeyMeta.present && (
+                              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                Saved ({inngestEventKeyMeta.source})
+                              </p>
+                            )}
+                            {inngestStatus && (
+                              <p className={cn(
+                                "text-[11px] font-medium",
+                                inngestStatus.success ? "text-emerald-400/80" : "text-rose-400/80"
+                              )}>
+                                {inngestStatus.message}
+                              </p>
+                            )}
 
                             <div className="space-y-2">
                                 <Label className="text-xs font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
@@ -389,10 +488,15 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
                                 </Label>
                                 <Input 
                                     type="password"
-                                    placeholder="sign_..." 
+                                    placeholder={inngestSigningKeyMeta.present ? "Saved (leave blank to keep)" : "sign_..."} 
                                     className="glass-input h-12 rounded-xl"
                                     {...form.register("INNGEST_SIGNING_KEY")}
                                 />
+                                {inngestSigningKeyMeta.present && (
+                                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                                    Saved ({inngestSigningKeyMeta.source})
+                                  </p>
+                                )}
                             </div>
                         </div>
                     </div>

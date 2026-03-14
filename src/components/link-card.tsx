@@ -18,7 +18,12 @@ type LinkData = {
 };
 
 export function LinkCard({ link }: { link: LinkData }) {
-  const hostname = new URL(link.url).hostname.replace('www.', '');
+  let hostname = "unknown";
+  try {
+    hostname = new URL(link.url).hostname.replace("www.", "");
+  } catch {
+    // If a bad URL makes it into the DB, don't crash the UI.
+  }
 
   return (
     <motion.div
@@ -41,6 +46,7 @@ export function LinkCard({ link }: { link: LinkData }) {
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-110"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              unoptimized
             />
           ) : (
             <div className="flex flex-col items-center justify-center h-full bg-slate-900 gap-2">
@@ -90,6 +96,7 @@ export function LinkCard({ link }: { link: LinkData }) {
                 height={12}
                 alt=""
                 className="w-3 h-3"
+                unoptimized
               />
             </div>
             <span className="text-[11px] uppercase tracking-[0.15em] text-slate-400 font-bold">
