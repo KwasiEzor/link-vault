@@ -70,7 +70,15 @@ export async function addLink(url: string, category: string = "general") {
       });
     } catch (inngestError) {
       console.error("Inngest event dispatch failed:", inngestError);
-      // We don't throw here to allow the link to be created even if background task fails
+      // Don't leave the record stuck in `pending` if dispatch fails.
+      try {
+        await prisma.link.update({
+          where: { id: link.id, userId },
+          data: { enrichmentStatus: "failed" },
+        });
+      } catch (updateError) {
+        console.error("Failed to update enrichment status:", updateError);
+      }
     }
 
     revalidatePath("/");
@@ -108,6 +116,9 @@ export async function reEnrichLink(linkId: string) {
       linkId: link.id,
       url: link.url,
     },
+  }).catch((error) => {
+    console.error("Inngest event dispatch failed:", error);
+    throw new Error("Background processing is not configured. Set INNGEST_EVENT_KEY and INNGEST_SIGNING_KEY in Vercel.");
   });
 
   return { success: true };

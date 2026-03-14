@@ -1,3 +1,5 @@
+import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 import { serve } from "inngest/next";
 import { inngest } from "@/lib/inngest";
 import { prisma } from "@/lib/prisma";
@@ -8,6 +10,7 @@ import { getSetting } from "@/lib/settings";
 import { assertSafeUrl, safeUrlOrNull } from "@/lib/url-safety";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const scrapeMetadata = inngest.createFunction(
   { id: "scrape-metadata", name: "Scrape Link Metadata" },
@@ -126,8 +129,36 @@ const checkLinkHealth = inngest.createFunction(
   }
 );
 
-export const { GET, POST, PUT } = serve({
+const handlers = serve({
   client: inngest,
   functions: [scrapeMetadata, checkLinkHealth],
   signingKey: process.env.INNGEST_SIGNING_KEY,
 });
+
+function ensureInngestConfigured() {
+  if (process.env.NODE_ENV === "production" && !process.env.INNGEST_SIGNING_KEY) {
+    return NextResponse.json(
+      { error: "Inngest is not configured: missing INNGEST_SIGNING_KEY" },
+      { status: 500 }
+    );
+  }
+  return null;
+}
+
+export async function GET(req: NextRequest, ctx: unknown) {
+  const fail = ensureInngestConfigured();
+  if (fail) return fail;
+  return handlers.GET(req, ctx as never);
+}
+
+export async function POST(req: NextRequest, ctx: unknown) {
+  const fail = ensureInngestConfigured();
+  if (fail) return fail;
+  return handlers.POST(req, ctx as never);
+}
+
+export async function PUT(req: NextRequest, ctx: unknown) {
+  const fail = ensureInngestConfigured();
+  if (fail) return fail;
+  return handlers.PUT(req, ctx as never);
+}

@@ -62,15 +62,25 @@ export function AddLinkForm() {
       setFetchingMetadata(true);
       try {
         const res = await fetch(`/api/metadata?url=${encodeURIComponent(urlValue)}`);
-        const data = await res.json();
+        let data: { title?: string; image?: string | null; description?: string | null; error?: string } | null = null;
+        try {
+          data = (await res.json()) as typeof data;
+        } catch {
+          const text = await res.text().catch(() => "");
+          data = { error: text ? text.slice(0, 160) : "Non-JSON response" };
+        }
         
         if (res.ok) {
-          setMetadata(data);
+          setMetadata({
+            title: data?.title || "Untitled",
+            image: data?.image ?? null,
+            description: data?.description ?? null,
+          });
         } else {
           setMetadata({ 
             title: "Metadata extraction failed", 
             image: null, 
-            description: data.error || "We couldn't reach this URL.",
+            description: `${data?.error || "We couldn't reach this URL."} (HTTP ${res.status})`,
             error: "true"
           });
         }
