@@ -8,6 +8,7 @@ import { revalidatePath } from "next/cache";
 import { enrichMetadata } from "@/lib/ai";
 import { getSetting } from "@/lib/settings";
 import { assertSafeUrl, safeUrlOrNull } from "@/lib/url-safety";
+import { fetchAndExtractReadableText } from "@/lib/reader-extract";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -42,6 +43,12 @@ const scrapeMetadata = inngest.createFunction(
     await step.run("update-link", async () => {
       const safeImage = await safeUrlOrNull(metadata.image);
       const safeCanonicalUrl = (await safeUrlOrNull(metadata.url)) || url;
+      let domain: string | null = null;
+      try {
+        domain = new URL(safeCanonicalUrl).hostname.replace(/^www\./, "");
+      } catch {
+        domain = null;
+      }
       await prisma.link.update({
         where: { id: linkId },
         data: {
@@ -55,6 +62,9 @@ const scrapeMetadata = inngest.createFunction(
           enrichmentStatus: aiResult ? "completed" : "failed",
           // Only update URL if we got a canonical one
           url: safeCanonicalUrl,
+          canonicalUrl: safeCanonicalUrl,
+          domain,
+          lastMetadataAt: new Date(),
         },
       });
     });
@@ -129,9 +139,60 @@ const checkLinkHealth = inngest.createFunction(
   }
 );
 
+const archiveLink = inngest.createFunction(
+  { id: "archive-link", name: "Archive Link Snapshot" },
+  { event: "link.archive.requested" },
+  async ({ event, step }) => {
+    const { linkId, url } = event.data;
+
+    try {
+      const extract = await step.run("extract-readable", async () => {
+        return await fetchAndExtractReadableText(url);
+      });
+
+      await step.run("update-link-archive", async () => {
+        await prisma.link.update({
+          where: { id: linkId },
+          data: {
+            archive: {
+              status: "completed",
+              archivedAt: new Date().toISOString(),
+              title: extract.title,
+              excerpt: extract.excerpt,
+              wordCount: extract.wordCount,
+              text: extract.text,
+            },
+          },
+        });
+      });
+
+      revalidatePath("/admin");
+      revalidatePath("/admin/curation");
+      revalidatePath("/");
+
+      return { success: true, linkId, archived: true, wordCount: extract.wordCount };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Archive failed";
+      await step.run("mark-archive-failed", async () => {
+        await prisma.link.update({
+          where: { id: linkId },
+          data: {
+            archive: {
+              status: "failed",
+              error: message,
+              failedAt: new Date().toISOString(),
+            },
+          },
+        });
+      });
+      throw error;
+    }
+  }
+);
+
 const handlers = serve({
   client: inngest,
-  functions: [scrapeMetadata, checkLinkHealth],
+  functions: [scrapeMetadata, checkLinkHealth, archiveLink],
   signingKey: process.env.INNGEST_SIGNING_KEY,
 });
 

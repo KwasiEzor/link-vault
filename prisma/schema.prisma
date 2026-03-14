@@ -62,11 +62,21 @@ model Link {
   image           String?
   category        String?  @default("general")
   status          String?  @default("active")
+  domain          String?
+  canonicalUrl    String?
   
   // AI Suggestions (The "Back-end" of enrichment)
   aiSummary       String?
   aiCategory      String?
   enrichmentStatus String? @default("idle") // idle, pending, completed, failed
+
+  // Detail Page Features (JSON-backed for fast iteration; can be normalized later)
+  tags            Json?    // string[]
+  notes           Json?    // [{ id, body, createdAt, updatedAt }]
+  highlights      Json?    // [{ id, quote, note?, createdAt }]
+  insights        Json?    // { summary, keyTakeaways?, topics?, entities?, updatedAt }
+  archive         Json?    // { status, requestedAt?, archivedAt?, title?, text?, error? }
+  lastMetadataAt  DateTime?
   
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt

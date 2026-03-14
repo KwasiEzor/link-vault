@@ -81,3 +81,62 @@ export async function enrichMetadata(title: string, description: string | null, 
     return null;
   }
 }
+
+export type LinkInsightsResult = {
+  summary: string;
+  keyTakeaways: string[];
+  topics: string[];
+  entities: string[];
+  suggestedTags: string[];
+};
+
+export async function generateLinkInsights(input: {
+  url: string;
+  title: string;
+  description: string | null;
+}): Promise<LinkInsightsResult | null> {
+  const aiEnabled = await getSetting("AI_ENABLED", true);
+  if (!aiEnabled) return null;
+
+  const openai = await getOpenAI();
+  if (!openai) return null;
+
+  const model = await getSetting("AI_MODEL", "gpt-3.5-turbo");
+
+  const prompt = `
+You are a world-class product researcher and digital curator.
+Create concise, practical insights for a saved web resource.
+
+URL: ${input.url}
+Title: ${input.title}
+Description: ${input.description || "None"}
+
+Return ONLY JSON in this exact shape:
+{
+  "summary": "1-2 sentences, max 40 words total",
+  "keyTakeaways": ["3-6 bullets, short and specific"],
+  "topics": ["3-8 high-level topics"],
+  "entities": ["0-8 notable entities/brands/tools/people mentioned or implied"],
+  "suggestedTags": ["5-12 short tags, lowercase, no #"]
+}
+`;
+
+  try {
+    const response = await openai.chat.completions.create({
+      messages: [
+        { role: "system", content: "You produce crisp, structured insights for curated links." },
+        { role: "user", content: prompt },
+      ],
+      model,
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0]?.message?.content;
+    if (!content) return null;
+
+    return JSON.parse(content) as LinkInsightsResult;
+  } catch (error) {
+    console.error("AI insights failed:", error);
+    return null;
+  }
+}
