@@ -44,29 +44,39 @@ export async function addLink(url: string, category: string = "general") {
   const title = hostname;
   const slug = `${slugify(title)}-${Math.random().toString(36).substring(2, 7)}`;
 
-  const link = await prisma.link.create({
-    data: {
-      url,
-      title,
-      slug,
-      category: validatedFields.data.category,
-      userId,
-      enrichmentStatus: "pending",
-    },
-  });
+  try {
+    const link = await prisma.link.create({
+      data: {
+        url,
+        title,
+        slug,
+        category: validatedFields.data.category,
+        userId,
+        enrichmentStatus: "pending",
+      },
+    });
 
-  // Dispatch background metadata scraping
-  await inngest.send({
-    name: "link.created",
-    data: {
-      linkId: link.id,
-      url: link.url,
-    },
-  });
+    // Dispatch background metadata scraping
+    try {
+      await inngest.send({
+        name: "link.created",
+        data: {
+          linkId: link.id,
+          url: link.url,
+        },
+      });
+    } catch (inngestError) {
+      console.error("Inngest event dispatch failed:", inngestError);
+      // We don't throw here to allow the link to be created even if background task fails
+    }
 
-  revalidatePath("/");
-  revalidatePath("/admin");
-  return link;
+    revalidatePath("/");
+    revalidatePath("/admin");
+    return link;
+  } catch (dbError) {
+    console.error("Database error adding link:", dbError);
+    throw new Error("Failed to add link to database. Please check your connection.");
+  }
 }
 
 export async function reEnrichLink(linkId: string) {
