@@ -21,7 +21,6 @@ export function AnalyticsChart({ data }: AnalyticsChartProps) {
   const chartData = useMemo(() => data, [data]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsMounted(true);
   }, []);
 
