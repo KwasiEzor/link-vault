@@ -40,10 +40,12 @@ Since Vercel is serverless, you need [Inngest Cloud](https://www.inngest.com/) t
 3.  Inngest will automatically discover your functions (`scrape-metadata`, `check-link-health`).
 
 ## 4. Deployment Command
-Vercel will automatically run the build command defined in `package.json`:
-`prisma generate && next build`
+Vercel will run `vercel-build` (if present) which we use to keep the DB schema in sync:
+`prisma generate && prisma db push --skip-generate && next build`
 
 This ensures the Prisma client is correctly typed for your Postgres schema at runtime.
+
+**Important:** `prisma db push` requires a non-pooled/direct connection. Make sure `DIRECT_URL` is set in Vercel.
 
 ---
 **Note:** If this is your first time deploying, ensure you run `npx prisma migrate deploy` locally (pointing to your production DB) or add it to your CI/CD to initialize the schema.
