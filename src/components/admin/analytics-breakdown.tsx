@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from "recharts";
 import { motion } from "framer-motion";
-import { Monitor, Smartphone, Tablet, Globe, MapPin } from "lucide-react";
+import { Monitor, Globe, MapPin } from "lucide-react";
 
 interface AnalyticsBreakdownProps {
   devices: { name: string; value: number }[];
@@ -144,7 +144,7 @@ export function AnalyticsBreakdown({ devices, referrers, countries }: AnalyticsB
 
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 sm:gap-6">
           {countries.length > 0 ? (
-            countries.map((country, i) => (
+            countries.map((country) => (
               <div key={country.name} className="flex flex-col gap-1 sm:gap-2 p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-white/5 border border-white/5 hover:bg-white/10 transition-colors">
                 <div className="flex items-center justify-between">
                   <span className="text-xl sm:text-2xl font-black text-white">{country.name}</span>

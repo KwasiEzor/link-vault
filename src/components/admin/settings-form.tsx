@@ -74,6 +74,7 @@ export function SettingsForm({ initialSettings }: SettingsFormProps) {
       }
       
       // Remove the UI-only field before saving
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const { AI_MODEL_SELECT, ...finalData } = dataToSave;
       
       await updateSettings(finalData as Record<string, string | boolean>);

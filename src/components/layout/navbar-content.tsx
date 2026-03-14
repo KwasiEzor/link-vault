@@ -24,7 +24,13 @@ import { usePathname } from "next/navigation";
 
 interface NavbarContentProps {
   variant?: "public" | "admin" | "detail";
-  session: any; // Using any for session type to avoid complex auth types in UI
+  session: {
+    user?: {
+      name?: string | null;
+      email?: string | null;
+      id?: string;
+    } | null;
+  } | null;
 }
 
 export function NavbarContent({ variant = "public", session }: NavbarContentProps) {

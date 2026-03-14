@@ -17,17 +17,14 @@ import {
   Plus, 
   Search, 
   Home, 
-  LogOut, 
   Link2,
   ExternalLink,
   Copy,
   TrendingUp,
-  Tags,
   Sparkles
 } from "lucide-react";
 import { getLinks } from "@/app/actions/links";
 import { toast } from "sonner";
-import { cn } from "@/lib/utils";
 
 type Link = {
   id: string;
@@ -42,7 +39,7 @@ export function CommandMenu() {
   const [open, setOpen] = React.useState(false);
   const [search, setSearch] = React.useState("");
   const [links, setLinks] = React.useState<Link[]>([]);
-  const [loading, setLoading] = React.useState(false);
+  const [, setLoading] = React.useState(false);
   const router = useRouter();
 
   React.useEffect(() => {

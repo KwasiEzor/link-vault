@@ -8,10 +8,8 @@ import {
   Sparkles, 
   Check, 
   X, 
-  ArrowRight, 
   Loader2, 
   Tag, 
-  MessageSquare,
   ExternalLink,
   Bot
 } from "lucide-react";
