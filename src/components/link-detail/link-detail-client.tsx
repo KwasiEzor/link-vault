@@ -252,30 +252,36 @@ export function LinkDetailClient({
 
   return (
     <>
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        <div className="lg:col-span-2 space-y-10">
-          <div className="relative aspect-video w-full rounded-[32px] overflow-hidden border border-white/10 shadow-2xl group bg-slate-900">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-12">
+          {/* Hero Section */}
+          <div className="relative aspect-video w-full rounded-[40px] overflow-hidden border border-white/10 shadow-2xl group bg-slate-950">
             {link.image ? (
               <Image
                 src={link.image}
                 alt={link.title}
                 fill
-                className="object-cover"
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
                 priority
                 unoptimized
               />
             ) : (
-              <div className="flex items-center justify-center h-full text-slate-500 italic">No preview available</div>
+              <div className="flex items-center justify-center h-full text-slate-500 italic font-medium">No preview available</div>
             )}
-            <div className="absolute inset-0 bg-linear-to-t from-black/60 via-transparent to-transparent opacity-60" />
+            
+            {/* Gradient Overlay */}
+            <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-80" />
 
-            <div className="absolute left-6 right-6 bottom-6 flex flex-col gap-3">
-              <div className="inline-flex w-fit rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 p-1">
+            {/* View Toggle - Top Right */}
+            <div className="absolute top-6 right-6">
+              <div className="inline-flex rounded-2xl bg-black/60 backdrop-blur-xl border border-white/10 p-1.5 shadow-2xl">
                 <button
                   type="button"
                   className={cn(
-                    "h-9 px-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors",
-                    activeView === "preview" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"
+                    "h-9 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                    activeView === "preview" 
+                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   )}
                   onClick={() => setActiveView("preview")}
                 >
@@ -284,75 +290,94 @@ export function LinkDetailClient({
                 <button
                   type="button"
                   className={cn(
-                    "h-9 px-4 rounded-xl text-[11px] font-black uppercase tracking-widest transition-colors",
-                    activeView === "reader" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"
+                    "h-9 px-5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                    activeView === "reader" 
+                      ? "bg-primary text-white shadow-lg shadow-primary/20" 
+                      : "text-white/60 hover:text-white hover:bg-white/5"
                   )}
                   onClick={() => setActiveView("reader")}
                 >
                   Reader
                 </button>
               </div>
-              {activeView === "reader" && (
-                <div className="rounded-2xl bg-black/45 border border-white/10 backdrop-blur-md p-4 text-sm text-slate-200">
-                  {!isOwner && (
-                    <p className="font-medium text-slate-200">
-                      Reader mode is available for the curator only.
+            </div>
+
+            {/* Reader Controls Overlay */}
+            {activeView === "reader" && (
+              <div className="absolute bottom-6 left-6 right-6">
+                <div className="rounded-2xl bg-black/60 border border-white/10 backdrop-blur-xl p-4 shadow-2xl flex items-center justify-between gap-4">
+                  {!isOwner ? (
+                    <p className="text-xs font-bold text-white/70 uppercase tracking-widest">
+                      Curator-only mode
                     </p>
-                  )}
-                  {isOwner && (
-                    <div className="space-y-2">
-                      {readerLoading && <p className="font-medium">Extracting readable content…</p>}
-                      {readerError && <p className="font-medium text-rose-300">{readerError}</p>}
-                      {reader && (
-                        <div className="flex flex-wrap items-center gap-3">
-                          <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
-                            {reader.wordCount.toLocaleString("en-US")} words
+                  ) : (
+                    <>
+                      <div className="flex items-center gap-4">
+                        {readerLoading ? (
+                          <div className="flex items-center gap-2">
+                            <RefreshCw className="h-3 w-3 animate-spin text-primary" />
+                            <span className="text-[10px] font-black uppercase tracking-widest text-white/70">Analyzing…</span>
+                          </div>
+                        ) : reader ? (
+                          <span className="text-[10px] font-black uppercase tracking-widest text-primary">
+                            {reader.wordCount.toLocaleString()} Words extracted
                           </span>
-                          <button
-                            type="button"
-                            onClick={createHighlightFromSelection}
-                            className={cn(
-                              buttonVariants({ variant: "outline" }),
-                              "h-9 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold text-xs"
-                            )}
-                          >
-                            <Highlighter className="mr-2 h-4 w-4" />
-                            Highlight Selection
-                          </button>
-                        </div>
+                        ) : null}
+                      </div>
+                      {reader && (
+                        <button
+                          type="button"
+                          onClick={createHighlightFromSelection}
+                          className={cn(
+                            buttonVariants({ variant: "outline", size: "sm" }),
+                            "h-9 rounded-xl border-white/10 bg-white/10 hover:bg-white/20 font-black text-[10px] uppercase tracking-widest transition-all"
+                          )}
+                        >
+                          <Highlighter className="mr-2 h-3.5 w-3.5" />
+                          Highlight Selection
+                        </button>
                       )}
-                    </div>
+                    </>
                   )}
                 </div>
-              )}
-            </div>
+              </div>
+            )}
           </div>
 
-          <div className="space-y-6">
-            <div className="space-y-3">
-              <h1 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] text-white">
-                {link.title}
-              </h1>
-
-              <div className="flex flex-wrap gap-3 pt-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-bold uppercase tracking-widest">
-                  <Tags className="h-3 w-3" />
-                  {link.category || "General"}
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
-                  <Calendar className="h-3 w-3" />
-                  {createdLabel}
-                </span>
-                {typeof link.enrichmentStatus === "string" && (
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-muted-foreground text-[10px] font-bold uppercase tracking-widest">
-                    <Network className="h-3 w-3" />
-                    {link.enrichmentStatus}
+          {/* Content Section */}
+          <div className="space-y-8">
+            <div className="space-y-6">
+              <div className="space-y-4">
+                <div className="flex flex-wrap items-center gap-3">
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-black uppercase tracking-[0.15em]">
+                    <Tags className="h-3 w-3" />
+                    {link.category || "General"}
                   </span>
-                )}
+                  <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/5 border border-white/10 text-white/60 text-[10px] font-black uppercase tracking-[0.15em]">
+                    <Calendar className="h-3 w-3" />
+                    {createdLabel}
+                  </span>
+                  {typeof link.enrichmentStatus === "string" && (
+                    <span className={cn(
+                      "inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border text-[10px] font-black uppercase tracking-[0.15em]",
+                      link.enrichmentStatus === "completed" ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400" :
+                      link.enrichmentStatus === "failed" ? "bg-rose-500/10 border-rose-500/20 text-rose-400" :
+                      "bg-amber-500/10 border-amber-500/20 text-amber-400"
+                    )}>
+                      <Network className="h-3 w-3" />
+                      {link.enrichmentStatus}
+                    </span>
+                  )}
+                </div>
+
+                <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tight leading-[1.05] text-white">
+                  {link.title}
+                </h1>
               </div>
 
-              <div className="sticky top-16 z-30 -mx-2">
-                <div className="mx-2 rounded-2xl bg-background/60 border border-white/10 backdrop-blur-xl shadow-xl p-2">
+              {/* Sticky Action Bar */}
+              <div className="sticky top-20 z-30">
+                <div className="rounded-[24px] bg-background/40 border border-white/10 backdrop-blur-2xl shadow-2xl p-2.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <a
                       href={link.url}
@@ -360,10 +385,10 @@ export function LinkDetailClient({
                       rel="noopener noreferrer"
                       className={cn(
                         buttonVariants({ size: "lg" }),
-                        "h-11 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-lg shadow-primary/20 transition-all active:scale-95 text-sm"
+                        "h-12 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[11px] shadow-xl shadow-primary/20 transition-all active:scale-95 flex-1 sm:flex-none justify-center"
                       )}
                     >
-                      Open
+                      Open Link
                       <ExternalLink className="ml-2 h-4 w-4" />
                     </a>
 
@@ -371,29 +396,31 @@ export function LinkDetailClient({
                       type="button"
                       onClick={copyUrl}
                       className={cn(
-                        buttonVariants({ variant: "outline" }),
-                        "h-11 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold"
+                        buttonVariants({ variant: "outline", size: "lg" }),
+                        "h-12 px-6 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase tracking-widest text-[11px] flex-1 sm:flex-none transition-all"
                       )}
                     >
-                      <Copy className="mr-2 h-4 w-4" />
+                      <Copy className="mr-2.5 h-4 w-4" />
                       Copy
                     </button>
 
-                    <div className="h-11 flex items-center px-2 rounded-xl border border-white/10 bg-white/5">
+                    <div className="h-12 flex items-center px-1 rounded-xl border border-white/10 bg-white/5">
                       <ShareButton url={link.url} title={link.title} description={link.description || undefined} variant="icon" />
                     </div>
 
+                    <div className="hidden sm:block w-px h-6 bg-white/10 mx-1" />
+
                     {isOwner && (
-                      <>
+                      <div className="flex flex-wrap items-center gap-2 flex-1 sm:flex-none">
                         <button
                           type="button"
                           onClick={() => setEditOpen(true)}
                           className={cn(
-                            buttonVariants({ variant: "outline" }),
-                            "h-11 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold"
+                            buttonVariants({ variant: "outline", size: "lg" }),
+                            "h-12 px-5 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase tracking-widest text-[11px] flex-1 sm:flex-none transition-all"
                           )}
                         >
-                          <Pencil className="mr-2 h-4 w-4" />
+                          <Pencil className="mr-2.5 h-4 w-4" />
                           Edit
                         </button>
 
@@ -402,11 +429,11 @@ export function LinkDetailClient({
                           onClick={onRefreshMetadata}
                           disabled={refreshing}
                           className={cn(
-                            buttonVariants({ variant: "outline" }),
-                            "h-11 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold"
+                            buttonVariants({ variant: "outline", size: "lg" }),
+                            "h-12 px-5 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase tracking-widest text-[11px] flex-1 sm:flex-none transition-all"
                           )}
                         >
-                          <RefreshCw className={cn("mr-2 h-4 w-4", refreshing && "animate-spin")} />
+                          <RefreshCw className={cn("mr-2.5 h-4 w-4", refreshing && "animate-spin")} />
                           Refresh
                         </button>
 
@@ -414,14 +441,14 @@ export function LinkDetailClient({
                           type="button"
                           onClick={onRequestArchive}
                           className={cn(
-                            buttonVariants({ variant: "outline" }),
-                            "h-11 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold"
+                            buttonVariants({ variant: "outline", size: "lg" }),
+                            "h-12 px-5 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase tracking-widest text-[11px] flex-1 sm:flex-none transition-all"
                           )}
                         >
-                          <Archive className="mr-2 h-4 w-4" />
+                          <Archive className="mr-2.5 h-4 w-4" />
                           Archive
                         </button>
-                      </>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -430,32 +457,52 @@ export function LinkDetailClient({
 
             <div className="prose prose-invert max-w-none">
               {activeView === "preview" && (
-                <p className="text-xl md:text-2xl text-slate-300 font-medium leading-relaxed">
+                <p className="text-xl md:text-2xl lg:text-3xl text-slate-300/90 font-medium leading-relaxed tracking-tight">
                   {link.description || "No detailed description available for this curated asset."}
                 </p>
               )}
 
               {activeView === "reader" && isOwner && (
-                <div className="rounded-3xl border border-white/10 bg-white/5 p-6">
-                  {readerLoading && <div className="h-6 w-48 bg-white/5 rounded-lg animate-pulse" />}
-                  {readerError && <p className="text-rose-300 font-medium">{readerError}</p>}
+                <div className="rounded-[32px] border border-white/10 bg-white/5 p-8 md:p-12 shadow-inner">
+                  {readerLoading && (
+                    <div className="space-y-4">
+                      <div className="h-8 w-3/4 bg-white/5 rounded-xl animate-pulse" />
+                      <div className="h-4 w-full bg-white/5 rounded-lg animate-pulse" />
+                      <div className="h-4 w-5/6 bg-white/5 rounded-lg animate-pulse" />
+                    </div>
+                  )}
+                  {readerError && (
+                    <div className="flex flex-col items-center justify-center py-12 text-center">
+                      <div className="h-12 w-12 rounded-full bg-rose-500/10 flex items-center justify-center mb-4">
+                        <Globe className="h-6 w-6 text-rose-400" />
+                      </div>
+                      <p className="text-rose-400 font-bold uppercase tracking-widest text-sm mb-2">Extraction Failed</p>
+                      <p className="text-slate-400 text-sm max-w-xs">{readerError}</p>
+                    </div>
+                  )}
                   {reader && (
-                    <>
-                      <h2 className="text-lg font-black text-white mb-3">{reader.title || "Reader Extract"}</h2>
-                      {reader.excerpt && <p className="text-slate-300">{reader.excerpt}</p>}
-                      <div className="mt-4 space-y-4">
+                    <article className="max-w-3xl mx-auto">
+                      <h2 className="text-2xl md:text-3xl font-black text-white mb-6 leading-tight">{reader.title || "Reader Extract"}</h2>
+                      {reader.excerpt && (
+                        <p className="text-lg text-slate-400 italic mb-8 border-l-2 border-primary/40 pl-6 py-1">
+                          {reader.excerpt}
+                        </p>
+                      )}
+                      <div className="mt-8 space-y-8 font-serif">
                         {reader.text.split("\n\n").slice(0, 40).map((p, idx) => (
-                          <p key={idx} className="text-slate-200 leading-relaxed">
+                          <p key={idx} className="text-lg md:text-xl text-slate-200 leading-relaxed selection:bg-primary/30">
                             {p}
                           </p>
                         ))}
                         {reader.text.split("\n\n").length > 40 && (
-                          <p className="text-muted-foreground text-sm font-medium">
-                            Showing first 40 paragraphs. Use Archive to store the full snapshot.
-                          </p>
+                          <div className="pt-8 border-t border-white/10 text-center">
+                            <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">
+                              Full content stored in archive snapshot
+                            </p>
+                          </div>
                         )}
                       </div>
-                    </>
+                    </article>
                   )}
                 </div>
               )}
@@ -463,46 +510,43 @@ export function LinkDetailClient({
           </div>
         </div>
 
+        {/* Sidebar */}
         <div className="space-y-8">
-          <div className="glass border border-white/10 rounded-[32px] p-6 sticky top-28 shadow-xl">
+          <div className="glass border border-white/10 rounded-[32px] p-2 sticky top-28 shadow-2xl bg-black/20 backdrop-blur-xl">
             <Tabs defaultValue="details" className="w-full" onValueChange={setActiveTab}>
               <TabsList
                 variant="line"
                 className={cn(
-                  "w-full justify-start gap-1 p-1 rounded-2xl border border-white/10 bg-white/5",
+                  "w-full justify-start gap-1 p-1 rounded-[24px] border-none bg-transparent",
                   "flex flex-wrap"
                 )}
               >
-                <TabsTrigger value="details" className="flex-none h-10 text-[11px] rounded-xl px-3">
+                <TabsTrigger value="details" className="flex-1 h-11 text-[10px] rounded-xl px-4 transition-all data-[state=active]:bg-white/10 data-[state=active]:shadow-lg">
                   <span className="font-black uppercase tracking-widest">Details</span>
                 </TabsTrigger>
                 {isOwner && (
                   <>
-                    <TabsTrigger value="notes" className="flex-none h-10 text-[11px] rounded-xl px-3">
-                      <StickyNote className="h-4 w-4" />
+                    <TabsTrigger value="notes" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
+                      <StickyNote className="h-3.5 w-3.5 mr-1.5" />
                       <span className="hidden sm:inline font-black uppercase tracking-widest">Notes</span>
                     </TabsTrigger>
-                    <TabsTrigger value="highlights" className="flex-none h-10 text-[11px] rounded-xl px-3">
-                      <Highlighter className="h-4 w-4" />
-                      <span className="hidden sm:inline font-black uppercase tracking-widest">Highlights</span>
+                    <TabsTrigger value="highlights" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
+                      <Highlighter className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="hidden sm:inline font-black uppercase tracking-widest">HLs</span>
                     </TabsTrigger>
-                    <TabsTrigger value="history" className="flex-none h-10 text-[11px] rounded-xl px-3">
-                      <History className="h-4 w-4" />
-                      <span className="hidden sm:inline font-black uppercase tracking-widest">History</span>
+                    <TabsTrigger value="insights" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
+                      <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                      <span className="hidden sm:inline font-black uppercase tracking-widest">AI</span>
                     </TabsTrigger>
-                    <TabsTrigger value="insights" className="flex-none h-10 text-[11px] rounded-xl px-3">
-                      <Sparkles className="h-4 w-4" />
-                      <span className="hidden sm:inline font-black uppercase tracking-widest">Insights</span>
-                    </TabsTrigger>
-                    <TabsTrigger value="related" className="flex-none h-10 text-[11px] rounded-xl px-3">
+                    <TabsTrigger value="related" className="flex-1 h-11 text-[10px] rounded-xl px-3 transition-all data-[state=active]:bg-white/10">
                       <span className="font-black uppercase tracking-widest">Related</span>
                     </TabsTrigger>
                   </>
                 )}
               </TabsList>
 
-              <div className="pt-6">
-                <TabsContent value="details">
+              <div className="p-5 pt-4">
+                <TabsContent value="details" className="mt-0 outline-hidden">
                   <DetailsPanel
                     link={link}
                     hostname={hostname}
@@ -605,79 +649,93 @@ function DetailsPanel({
   const [tagDraft, setTagDraft] = React.useState("");
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <div className="h-12 w-12 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
-          <Image
-            src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
-            width={24}
-            height={24}
-            alt=""
-            unoptimized
-          />
+    <div className="space-y-8">
+      {/* Source & Primary Actions */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <div className="h-14 w-14 rounded-[18px] bg-white/5 border border-white/10 flex items-center justify-center overflow-hidden shadow-inner">
+            <Image
+              src={`https://www.google.com/s2/favicons?domain=${hostname}&sz=64`}
+              width={28}
+              height={28}
+              alt=""
+              unoptimized
+              className="opacity-90"
+            />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">Domain Source</p>
+            <p className="text-xl font-black truncate text-white uppercase tracking-tight">{hostname}</p>
+          </div>
         </div>
-        <div className="flex-1 min-w-0">
-          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-0.5">Source</p>
-          <p className="text-lg font-bold truncate text-white uppercase">{hostname}</p>
+
+        <div className="grid grid-cols-2 gap-3">
+          <a
+            href={link.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              buttonVariants({ variant: "outline" }),
+              "h-12 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-black uppercase tracking-widest text-[10px] justify-center transition-all"
+            )}
+          >
+            <Globe className="mr-2.5 h-4 w-4" />
+            Visit
+          </a>
+          <ShareButton url={link.url} title={link.title} description={link.description || undefined} variant="full" className="w-full h-12 rounded-xl text-[10px]" />
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <a
-          href={link.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={cn(
-            buttonVariants({ variant: "outline" }),
-            "h-11 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold justify-center"
-          )}
-        >
-          <Globe className="mr-2 h-4 w-4" />
-          Visit
-        </a>
-        <ShareButton url={link.url} title={link.title} description={link.description || undefined} variant="full" className="w-full" />
-      </div>
+      <div className="h-px bg-white/5" />
 
-      <div className="rounded-2xl bg-primary/5 border border-primary/10 p-4">
-        <p className="text-[10px] font-bold text-primary uppercase tracking-widest mb-2">Curated By</p>
-        <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-slate-800 overflow-hidden relative">
+      {/* Curator Info */}
+      <div className="rounded-2xl bg-primary/5 border border-primary/10 p-5 shadow-inner">
+        <p className="text-[10px] font-black text-primary uppercase tracking-[0.15em] mb-3">Curated By</p>
+        <div className="flex items-center gap-4">
+          <div className="h-10 w-10 rounded-full bg-slate-800 border border-white/10 overflow-hidden relative">
             {link.user.image ? (
               <Image src={link.user.image} alt={link.user.name || "Curator"} fill unoptimized />
             ) : (
-              <div className="h-full w-full flex items-center justify-center text-[10px] font-bold">LV</div>
+              <div className="h-full w-full flex items-center justify-center text-[10px] font-black bg-primary/20 text-primary uppercase">
+                {link.user.name?.slice(0, 2) || "LV"}
+              </div>
             )}
           </div>
-          <span className="text-sm font-bold text-white">{link.user.name || "Anonymous Curator"}</span>
+          <span className="text-sm font-black text-white tracking-tight">{link.user.name || "Anonymous Curator"}</span>
         </div>
       </div>
 
       {isOwner && (
-        <>
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Tags</p>
+        <div className="space-y-8">
+          {/* Tags Management */}
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Tags</p>
+              {tagsSaving && <span className="text-[10px] text-primary font-black uppercase tracking-widest animate-pulse">Saving…</span>}
+            </div>
+            
             <div className="flex flex-wrap gap-2">
               {tags.length === 0 && (
-                <span className="text-sm text-muted-foreground font-medium">No tags yet.</span>
+                <span className="text-xs text-muted-foreground/60 font-medium italic">No tags assigned yet.</span>
               )}
               {tags.map((t) => (
                 <button
                   key={t}
                   type="button"
                   onClick={() => onRemoveTag(t)}
-                  className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/90 text-[11px] font-black tracking-tight hover:bg-white/10"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/80 text-[10px] font-black tracking-tight hover:bg-rose-500/10 hover:border-rose-500/20 hover:text-rose-400 transition-all group"
                   title="Remove tag"
                   disabled={tagsSaving}
                 >
-                  <span className="opacity-80">#</span>
+                  <span className="opacity-40 group-hover:text-rose-400">#</span>
                   {t}
-                  <span className="text-white/50">×</span>
+                  <span className="text-white/20 group-hover:text-rose-400">×</span>
                 </button>
               ))}
             </div>
 
             <form
-              className="mt-3 flex items-stretch gap-2"
+              className="relative"
               onSubmit={(e) => {
                 e.preventDefault();
                 onAddTag(tagDraft);
@@ -687,48 +745,56 @@ function DetailsPanel({
               <input
                 value={tagDraft}
                 onChange={(e) => setTagDraft(e.target.value)}
-                placeholder="Add tag (enter)"
-                className="h-11 w-full rounded-2xl bg-black/20 border border-white/10 px-4 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+                placeholder="Add tag…"
+                className="h-12 w-full rounded-xl bg-black/40 border border-white/10 px-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
                 disabled={detailsLoading || tagsSaving}
               />
               <button
                 type="submit"
-                className={cn(
-                  buttonVariants({ size: "lg" }),
-                  "h-11 rounded-2xl bg-primary hover:bg-primary/90 text-white font-black shadow-lg shadow-primary/20 shrink-0"
-                )}
-                disabled={detailsLoading || tagsSaving}
+                className="absolute right-2 top-2 h-8 px-4 rounded-lg bg-primary hover:bg-primary/90 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all active:scale-95 disabled:opacity-50"
+                disabled={detailsLoading || tagsSaving || !tagDraft.trim()}
               >
                 Add
               </button>
             </form>
-            {tagsSaving && <p className="text-[11px] text-muted-foreground font-medium mt-2">Saving…</p>}
           </div>
 
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-4 space-y-2">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">State</p>
-            <div className="text-sm text-white/90 font-medium space-y-1">
-              <p>
-                Metadata:{" "}
-                <span className="text-white/70">
-                  {lastMetadataAt ? new Date(lastMetadataAt).toLocaleString("en-US") : "unknown"}
+          <div className="h-px bg-white/5" />
+
+          {/* Metadata State */}
+          <div className="space-y-3">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Persistence State</p>
+            <div className="grid grid-cols-1 gap-2">
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Metadata</span>
+                <span className="text-[10px] font-black text-white/80">
+                  {lastMetadataAt ? new Date(lastMetadataAt).toLocaleDateString() : "Pending"}
                 </span>
-              </p>
-              <p>
-                Archive:{" "}
-                <span className="text-white/70">{archive?.status ? String(archive.status) : "idle"}</span>
-              </p>
+              </div>
+              <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10">
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/50">Snapshot</span>
+                <span className={cn(
+                  "text-[10px] font-black uppercase tracking-widest",
+                  archive?.status === "completed" ? "text-emerald-400" : 
+                  archive?.status === "failed" ? "text-rose-400" : "text-amber-400"
+                )}>
+                  {archive?.status ? String(archive.status) : "Idle"}
+                </span>
+              </div>
             </div>
           </div>
 
-          <div className="rounded-2xl bg-white/5 border border-white/10 p-4">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Quick Links</p>
+          <div className="h-px bg-white/5" />
+
+          {/* Quick Navigation */}
+          <div className="space-y-3">
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Management</p>
             <div className="flex flex-wrap gap-2">
               <NextLink
                 href="/admin"
                 className={cn(
                   buttonVariants({ variant: "outline" }),
-                  "h-10 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold"
+                  "h-10 flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-black text-[10px] uppercase tracking-widest transition-all"
                 )}
               >
                 Dashboard
@@ -737,24 +803,25 @@ function DetailsPanel({
                 href="/admin/curation"
                 className={cn(
                   buttonVariants({ variant: "outline" }),
-                  "h-10 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold"
+                  "h-10 flex-1 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-black text-[10px] uppercase tracking-widest transition-all"
                 )}
               >
-                Curator&apos;s Lab
+                Lab
               </NextLink>
             </div>
           </div>
-        </>
+        </div>
       )}
     </div>
   );
 }
 
-function PlaceholderPanel({ title, description }: { title: string; description: string }) {
+function PlaceholderPanel({ title, description, icon: Icon }: { title: string; description: string; icon?: React.ElementType }) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-5">
-      <p className="text-sm font-black text-white">{title}</p>
-      <p className="text-sm text-muted-foreground font-medium pt-1">{description}</p>
+    <div className="flex flex-col items-center justify-center py-12 px-6 rounded-[24px] border border-dashed border-white/10 bg-white/5 text-center">
+      {Icon && <Icon className="h-8 w-8 text-white/10 mb-4" />}
+      <p className="text-xs font-black text-white uppercase tracking-widest mb-1">{title}</p>
+      <p className="text-xs text-muted-foreground leading-relaxed">{description}</p>
     </div>
   );
 }
@@ -809,38 +876,41 @@ function NotesPanel({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">New note</p>
+    <div className="space-y-6">
+      <div className="rounded-[24px] border border-white/10 bg-black/20 p-5 shadow-inner">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3">Add private note</p>
         <textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}
-          placeholder="Write a note…"
-          className="w-full min-h-24 rounded-2xl bg-black/20 border border-white/10 p-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          placeholder="Jot down some context or takeaways…"
+          className="w-full min-h-24 rounded-xl bg-black/40 border border-white/10 p-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
           disabled={saving}
         />
-        <div className="pt-3 flex items-center justify-between gap-3">
-          <p className="text-[11px] text-muted-foreground font-medium">Notes are private to you.</p>
+        <div className="pt-4 flex items-center justify-between gap-4">
+          <div className="flex items-center gap-1.5 text-white/30">
+            <Globe className="h-3 w-3" />
+            <span className="text-[9px] font-black uppercase tracking-widest">Private</span>
+          </div>
           <button
             type="button"
             onClick={add}
             disabled={saving || draft.trim().length === 0}
-            className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold")}
+            className={cn(buttonVariants({ size: "sm" }), "h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white text-[10px] font-black uppercase tracking-widest transition-all")}
           >
-            Add note
+            {saving ? "Saving…" : "Add Note"}
           </button>
         </div>
       </div>
 
-      {notes.length === 0 ? (
-        <PlaceholderPanel title="No notes yet" description="Add context, next steps, or why this link matters." />
-      ) : (
-        <div className="space-y-3">
-          {notes.map((n) => (
+      <div className="space-y-4">
+        {notes.length === 0 ? (
+          <PlaceholderPanel icon={StickyNote} title="No Notes" description="Keep track of your thoughts about this link." />
+        ) : (
+          notes.map((n) => (
             <NoteItem key={n.id} note={n} disabled={saving} onUpdate={update} onDelete={remove} />
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -862,53 +932,61 @@ function NoteItem({
   React.useEffect(() => setValue(note.body), [note.body]);
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground font-black uppercase tracking-widest">
-            {new Date(note.createdAt).toLocaleString("en-US")}
-          </p>
-        </div>
-        <div className="flex items-center gap-2 shrink-0">
+    <div className="rounded-2xl border border-white/10 bg-white/5 p-5 transition-all hover:bg-white/[0.07]">
+      <div className="flex items-start justify-between gap-4 mb-4">
+        <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">
+          {new Date(note.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+        </span>
+        <div className="flex items-center gap-2">
           <button
             type="button"
             onClick={() => setEditing((v) => !v)}
-            className={cn(buttonVariants({ variant: "outline" }), "h-9 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold text-xs")}
+            className="h-7 w-7 rounded-lg border border-white/10 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 transition-all"
             disabled={disabled}
+            title="Edit"
           >
-            <Pencil className="mr-2 h-4 w-4" />
-            {editing ? "Done" : "Edit"}
+            <Pencil className="h-3.5 w-3.5" />
           </button>
           <button
             type="button"
             onClick={() => onDelete(note.id)}
-            className={cn(buttonVariants({ variant: "outline" }), "h-9 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold text-xs")}
+            className="h-7 w-7 rounded-lg border border-white/10 flex items-center justify-center text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
             disabled={disabled}
+            title="Delete"
           >
-            Delete
+            <Tags className="h-3.5 w-3.5 rotate-45" />
           </button>
         </div>
       </div>
 
       {editing ? (
-        <div className="pt-3 space-y-3">
+        <div className="space-y-3">
           <textarea
             value={value}
             onChange={(e) => setValue(e.target.value)}
-            className="w-full min-h-20 rounded-2xl bg-black/20 border border-white/10 p-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+            className="w-full min-h-20 rounded-xl bg-black/40 border border-white/10 p-4 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
             disabled={disabled}
           />
-          <button
-            type="button"
-            onClick={() => onUpdate(note.id, value)}
-            className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold")}
-            disabled={disabled || value.trim().length === 0 || value === note.body}
-          >
-            Save changes
-          </button>
+          <div className="flex justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => setEditing(false)}
+              className="h-9 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest text-white/60 hover:text-white"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => onUpdate(note.id, value)}
+              className="h-9 px-4 rounded-lg bg-primary hover:bg-primary/90 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-primary/20 transition-all"
+              disabled={disabled || value.trim().length === 0 || value === note.body}
+            >
+              Save
+            </button>
+          </div>
         </div>
       ) : (
-        <p className="pt-3 text-sm text-slate-200 whitespace-pre-wrap">{note.body}</p>
+        <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{note.body}</p>
       )}
     </div>
   );
@@ -954,64 +1032,70 @@ function HighlightsPanel({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-        <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-2">New highlight</p>
+    <div className="space-y-6">
+      <div className="rounded-[24px] border border-white/10 bg-black/20 p-5 shadow-inner">
+        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-3">Clip from source</p>
         <textarea
           value={quote}
           onChange={(e) => setQuote(e.target.value)}
-          placeholder="Paste or type a quote… (Tip: in Reader view, select text then click Highlight Selection)"
-          className="w-full min-h-20 rounded-2xl bg-black/20 border border-white/10 p-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          placeholder="Paste a significant quote or insight…"
+          className="w-full min-h-20 rounded-xl bg-black/40 border border-white/10 p-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all resize-none"
           disabled={saving}
         />
         <input
           value={note}
           onChange={(e) => setNote(e.target.value)}
-          placeholder="Optional note"
-          className="mt-3 h-10 w-full rounded-xl bg-white/5 border border-white/10 px-3 text-sm text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary/30"
+          placeholder="Context for this clip (optional)"
+          className="mt-3 h-11 w-full rounded-xl bg-black/20 border border-white/10 px-4 text-sm text-white placeholder:text-white/30 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
           disabled={saving}
         />
-        <div className="pt-3 flex justify-end">
+        <div className="pt-4 flex justify-end">
           <button
             type="button"
             onClick={add}
             disabled={saving || quote.trim().length === 0}
-            className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold")}
+            className={cn(buttonVariants({ size: "sm" }), "h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white text-[10px] font-black uppercase tracking-widest transition-all")}
           >
-            Add highlight
+            {saving ? "Saving…" : "Add Highlight"}
           </button>
         </div>
       </div>
 
-      {highlights.length === 0 ? (
-        <PlaceholderPanel title="No highlights yet" description="Highlights help you build a personal knowledge base from the web." />
-      ) : (
-        <div className="space-y-3">
-          {highlights.map((h) => (
-            <div key={h.id} className="rounded-3xl border border-white/10 bg-white/5 p-4">
-              <div className="flex items-start justify-between gap-3">
-                <p className="text-[11px] text-muted-foreground font-black uppercase tracking-widest">
-                  {new Date(h.createdAt).toLocaleString("en-US")}
-                </p>
+      <div className="space-y-4">
+        {highlights.length === 0 ? (
+          <PlaceholderPanel icon={Highlighter} title="No Highlights" description="Extract key insights directly from the content." />
+        ) : (
+          highlights.map((h) => (
+            <div key={h.id} className="rounded-2xl border border-white/10 bg-white/5 p-5 transition-all hover:bg-white/[0.07]">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <span className="text-[9px] font-black text-white/40 uppercase tracking-[0.2em]">
+                  {new Date(h.createdAt).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </span>
                 <button
                   type="button"
                   onClick={() => remove(h.id)}
-                  className={cn(buttonVariants({ variant: "outline" }), "h-9 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold text-xs")}
+                  className="h-7 w-7 rounded-lg border border-white/10 flex items-center justify-center text-rose-400/60 hover:text-rose-400 hover:bg-rose-500/10 transition-all"
                   disabled={saving}
+                  title="Delete"
                 >
-                  Delete
+                  <Tags className="h-3.5 w-3.5 rotate-45" />
                 </button>
               </div>
-              <p className="pt-3 text-sm text-slate-200 whitespace-pre-wrap">
-                <span className="text-primary font-black">“</span>
+              <p className="text-sm text-slate-200 leading-relaxed font-serif selection:bg-primary/30">
+                <span className="text-primary font-black mr-2">“</span>
                 {h.quote}
-                <span className="text-primary font-black">”</span>
+                <span className="text-primary font-black ml-1">”</span>
               </p>
-              {h.note && <p className="pt-2 text-sm text-white/70 font-medium">{h.note}</p>}
+              {h.note && (
+                <div className="mt-4 pt-4 border-t border-white/5">
+                  <p className="text-[10px] font-black text-primary/60 uppercase tracking-widest mb-1">Context</p>
+                  <p className="text-xs text-slate-400 font-medium">{h.note}</p>
+                </div>
+              )}
             </div>
-          ))}
-        </div>
-      )}
+          ))
+        )}
+      </div>
     </div>
   );
 }
@@ -1042,32 +1126,35 @@ function HistoryPanel({
   }, [active, clicks, linkId, onClicksChange]);
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-4">
-        <p className="text-sm font-black text-white">Recent visits</p>
-        <p className="text-sm text-muted-foreground font-medium pt-1">
-          Shows the most recent tracked visits (best-effort).
+    <div className="space-y-6">
+      <div className="rounded-[24px] border border-white/10 bg-black/20 p-5 shadow-inner">
+        <p className="text-xs font-black text-white uppercase tracking-widest mb-1">Engagement History</p>
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Recent tracked visits and traffic sources for this asset.
         </p>
       </div>
 
-      {loading && <PlaceholderPanel title="Loading…" description="Fetching recent visits." />}
-      {error && <PlaceholderPanel title="Could not load history" description={error} />}
+      {loading && <PlaceholderPanel title="Loading…" description="Fetching recent activity." />}
+      {error && <PlaceholderPanel title="Error" description={error} />}
 
-      {clicks && clicks.length === 0 && <PlaceholderPanel title="No visits yet" description="Once someone opens this link page, visits will appear here." />}
+      {clicks && clicks.length === 0 && <PlaceholderPanel icon={History} title="No Activity" description="Once someone opens this link, visits will appear here." />}
+      
       {clicks && clicks.length > 0 && (
         <div className="space-y-3">
           {clicks.map((c) => (
-            <div key={c.id} className="rounded-3xl border border-white/10 bg-white/5 p-4">
-              <p className="text-[11px] text-muted-foreground font-black uppercase tracking-widest">
-                {new Date(c.createdAt).toLocaleString("en-US")}
-              </p>
-              <p className="pt-2 text-sm text-white/80 font-medium truncate">
-                Referrer: {c.referrer || "direct"}
-              </p>
-              {c.country && (
-                <p className="pt-1 text-xs text-white/60 font-bold uppercase tracking-widest">
-                  {c.country}
+            <div key={c.id} className="rounded-2xl border border-white/10 bg-white/5 p-4 flex items-center justify-between gap-4 transition-all hover:bg-white/[0.07]">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] mb-1">
+                  {new Date(c.createdAt).toLocaleDateString()} at {new Date(c.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </p>
+                <p className="text-xs font-black text-white/80 truncate">
+                  {c.referrer || "Direct Access"}
+                </p>
+              </div>
+              {c.country && (
+                <span className="px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-[9px] font-black uppercase tracking-widest text-white/60">
+                  {c.country}
+                </span>
               )}
             </div>
           ))}
@@ -1123,42 +1210,44 @@ function InsightsPanel({
   };
 
   return (
-    <div className="space-y-4">
-      <div className="rounded-3xl border border-white/10 bg-white/5 p-4 flex items-start justify-between gap-3">
-        <div>
-          <p className="text-sm font-black text-white">AI Insights</p>
-          <p className="text-sm text-muted-foreground font-medium pt-1">
-            Generates a concise summary, takeaways, and suggested tags.
+    <div className="space-y-6">
+      <div className="rounded-[24px] border border-white/10 bg-black/20 p-5 shadow-inner flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex-1">
+          <p className="text-xs font-black text-white uppercase tracking-widest mb-1">AI-Powered Synthesis</p>
+          <p className="text-xs text-muted-foreground leading-relaxed">
+            Extract semantics, takeaways, and suggested tags.
           </p>
-          {err && <p className="pt-2 text-sm text-rose-300 font-medium">{err}</p>}
         </div>
         <button
           type="button"
           onClick={run}
           disabled={loading}
-          className={cn(buttonVariants({ size: "lg" }), "h-10 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shrink-0")}
+          className={cn(buttonVariants({ size: "sm" }), "h-10 px-6 rounded-xl bg-primary hover:bg-primary/90 text-white text-[10px] font-black uppercase tracking-widest transition-all shrink-0")}
         >
-          {loading ? "Working…" : "Generate"}
+          {loading ? "Thinking…" : "Generate"}
         </button>
       </div>
 
+      {err && <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-xs font-bold">{err}</div>}
+
       {!insights ? (
-        <PlaceholderPanel title="No insights yet" description="Click Generate to create insights for this resource." />
+        <PlaceholderPanel icon={Sparkles} title="No Insights" description="Click generate to analyze this curated resource." />
       ) : (
-        <div className="rounded-3xl border border-white/10 bg-white/5 p-4 space-y-4">
+        <div className="space-y-6">
           {insights.summary && (
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Summary</p>
-              <p className="pt-2 text-sm text-slate-200 font-medium">{String(insights.summary)}</p>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-3">Executive Summary</p>
+              <p className="text-sm text-slate-200 leading-relaxed font-medium">{String(insights.summary)}</p>
             </div>
           )}
 
           {Array.isArray(insights.keyTakeaways) && insights.keyTakeaways.length > 0 && (
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Key takeaways</p>
-              <ul className="pt-2 space-y-2">
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-4">Core Takeaways</p>
+              <ul className="space-y-4">
                 {insights.keyTakeaways.slice(0, 8).map((t, idx) => (
-                  <li key={idx} className="text-sm text-slate-200 font-medium">
+                  <li key={idx} className="flex gap-3 text-sm text-slate-300 leading-relaxed">
+                    <span className="h-1.5 w-1.5 rounded-full bg-primary/40 shrink-0 mt-2" />
                     {String(t)}
                   </li>
                 ))}
@@ -1167,25 +1256,25 @@ function InsightsPanel({
           )}
 
           {insights.suggestedTags.length > 0 && (
-            <div>
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Suggested tags</p>
+            <div className="rounded-2xl border border-white/10 bg-white/5 p-5">
+              <div className="flex items-center justify-between gap-4 mb-4">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-primary">Suggested Taxonomy</p>
                 <button
                   type="button"
                   onClick={applyTags}
                   disabled={loading}
-                  className={cn(buttonVariants({ variant: "outline" }), "h-9 rounded-xl border-white/10 bg-white/5 hover:bg-white/10 font-bold text-xs")}
+                  className="h-8 px-3 rounded-lg border border-primary/20 bg-primary/10 text-primary text-[10px] font-black uppercase tracking-widest hover:bg-primary/20 transition-all"
                 >
-                  Apply tags
+                  Apply All
                 </button>
               </div>
-              <div className="pt-2 flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 {insights.suggestedTags.slice(0, 12).map((t) => (
                   <span
                     key={String(t)}
-                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-white/90 text-[11px] font-black tracking-tight"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-white/70 text-[10px] font-black tracking-tight"
                   >
-                    <span className="opacity-80">#</span>
+                    <span className="opacity-40">#</span>
                     {String(t)}
                   </span>
                 ))}
@@ -1223,11 +1312,11 @@ function RelatedPanel({
       .finally(() => setLoading(false));
   }, [active, linkId, onRelatedChange, related]);
 
-  if (loading) return <PlaceholderPanel title="Loading…" description="Finding related assets." />;
-  if (error) return <PlaceholderPanel title="Could not load related assets" description={error} />;
+  if (loading) return <PlaceholderPanel title="Analyzing Context…" description="Finding semantically related assets." />;
+  if (error) return <PlaceholderPanel title="Error" description={error} />;
 
   if (!related || related.length === 0) {
-    return <PlaceholderPanel title="No related assets yet" description="As you curate more links, related items will show up here." />;
+    return <PlaceholderPanel icon={Network} title="Isolated Asset" description="As you curate more items, semantic relations will appear here." />;
   }
 
   return (
@@ -1236,16 +1325,26 @@ function RelatedPanel({
         <NextLink
           key={r.id}
           href={`/links/${r.slug || r.id}`}
-          className="group flex items-center gap-3 rounded-3xl border border-white/10 bg-white/5 p-3 hover:bg-white/10 transition-colors"
+          className="group flex items-center gap-4 rounded-2xl border border-white/10 bg-white/5 p-4 hover:bg-white/[0.08] hover:border-white/20 transition-all shadow-sm"
         >
-          <div className="h-12 w-12 rounded-2xl bg-black/20 border border-white/10 overflow-hidden relative shrink-0">
-            {r.image ? <Image src={r.image} alt="" fill className="object-cover" unoptimized /> : null}
+          <div className="h-14 w-14 rounded-xl bg-black/40 border border-white/10 overflow-hidden relative shrink-0 shadow-inner">
+            {r.image ? (
+              <Image src={r.image} alt="" fill className="object-cover transition-transform duration-500 group-hover:scale-110" unoptimized />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-[10px] font-black text-white/10 uppercase">NA</div>
+            )}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="font-black text-sm text-white truncate group-hover:text-primary transition-colors">{r.title}</p>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-              {r.category || "general"} • {new Date(r.createdAt).toLocaleDateString("en-US")}
-            </p>
+            <p className="font-black text-sm text-white/90 truncate group-hover:text-primary transition-colors tracking-tight">{r.title}</p>
+            <div className="flex items-center gap-2 mt-1">
+              <span className="text-[9px] font-black uppercase tracking-widest text-primary/60">
+                {r.category || "General"}
+              </span>
+              <span className="h-1 w-1 rounded-full bg-white/10" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-white/30">
+                {new Date(r.createdAt).toLocaleDateString("en-US", { month: 'short', year: 'numeric' })}
+              </span>
+            </div>
           </div>
         </NextLink>
       ))}
