@@ -1,5 +1,4 @@
 import ogs from "open-graph-scraper";
-import DOMPurify from "isomorphic-dompurify";
 import { assertSafeUrl, safeUrlOrNull } from "./url-safety";
 
 export type SiteMetadata = {
@@ -8,6 +7,16 @@ export type SiteMetadata = {
   image: string | null;
   url: string;
 };
+
+function sanitizeText(input: unknown, maxLen: number) {
+  const raw = String(input ?? "");
+  const withoutTags = raw.replace(/<[^>]*>/g, "");
+  const normalized = withoutTags
+    .replace(/[\u0000-\u001F\u007F]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return normalized.length > maxLen ? normalized.slice(0, maxLen) : normalized;
+}
 
 export async function getMetadata(url: string): Promise<SiteMetadata | null> {
   try {
@@ -36,10 +45,14 @@ export async function getMetadata(url: string): Promise<SiteMetadata | null> {
     const candidateCanonicalUrl = result.ogUrl || result.requestUrl || url;
     const safeCanonicalUrl = (await safeUrlOrNull(candidateCanonicalUrl)) || url;
 
-    // Sanitize to prevent XSS from scraped content
+    // React escapes plain text by default; we mainly strip tags/control chars
+    // to prevent ugly rendering and accidental HTML in stored strings.
+    const title = sanitizeText(rawTitle, 200) || "Untitled";
+    const description = rawDescription ? sanitizeText(rawDescription, 600) : "";
+
     return {
-      title: DOMPurify.sanitize(rawTitle),
-      description: rawDescription ? DOMPurify.sanitize(rawDescription) : null,
+      title,
+      description: description || null,
       image: safeImage,
       url: safeCanonicalUrl,
     };
